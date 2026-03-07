@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -311,39 +312,48 @@ const TBLOCK=new Set([TR.W,TR.DP]);
 const VCX=13, VCY=14.5, SAFE_R=7, GRACE=10;
 
 // ═══════════════════════════════════════
-// AUDIO ENGINE (Web Audio API — no files)
+// AUDIO ENGINE
 // ═══════════════════════════════════════
-let AC=null, musicGain=null, sfxGain=null, musicNodes=[], muted=false, musicPlaying=false;
+let AC=null, musicGain=null, sfxGain=null, muted=false, musicPlaying=false;
 
 function initAudio(){
   try{
     AC=new(window.AudioContext||window.webkitAudioContext)();
-    musicGain=AC.createGain(); musicGain.gain.value=0.18; musicGain.connect(AC.destination);
-    sfxGain=AC.createGain(); sfxGain.gain.value=0.35; sfxGain.connect(AC.destination);
+    musicGain=AC.createGain(); musicGain.gain.value=0.15; musicGain.connect(AC.destination);
+    sfxGain=AC.createGain();   sfxGain.gain.value=0.32;   sfxGain.connect(AC.destination);
   }catch(e){AC=null;}
 }
 
 function toggleMute(){
   muted=!muted;
-  if(AC){musicGain.gain.value=muted?0:0.18;sfxGain.gain.value=muted?0:0.35;}
+  if(AC){musicGain.gain.value=muted?0:0.15;sfxGain.gain.value=muted?0:0.32;}
   document.getElementById('mute-btn').textContent=muted?'🔇':'🔊';
 }
 
-// Tiny chiptune beep helper
 function beep(freq,dur,type='square',vol=1,dest=null){
   if(!AC||muted)return;
-  const osc=AC.createOscillator(),g=AC.createGain();
-  osc.type=type;osc.frequency.value=freq;
+  const o=AC.createOscillator(),g=AC.createGain();
+  o.type=type;o.frequency.value=freq;
   g.gain.setValueAtTime(vol,AC.currentTime);
   g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+dur);
-  osc.connect(g);g.connect(dest||sfxGain);
-  osc.start();osc.stop(AC.currentTime+dur);
+  o.connect(g);g.connect(dest||sfxGain);
+  o.start();o.stop(AC.currentTime+dur);
+}
+function beepAt(t,freq,dur,type,vol,dest){
+  if(!AC||muted)return;
+  const o=AC.createOscillator(),g=AC.createGain();
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(0,t-0.005);
+  g.gain.linearRampToValueAtTime(vol,t+0.01);
+  g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  o.connect(g);g.connect(dest||musicGain);
+  o.start(t);o.stop(t+dur+0.05);
 }
 
 function sfxAttack(){if(!AC)return;beep(220,.08,'sawtooth',.6);setTimeout(()=>beep(180,.06,'sawtooth',.4),40);}
 function sfxHit(){if(!AC)return;beep(100,.12,'square',.7);beep(80,.1,'sawtooth',.5);}
 function sfxLoot(){if(!AC)return;[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.15,'triangle',.4),i*60));}
-function sfxLevelup(){if(!AC)return;[262,330,392,523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.2,'triangle',.5),i*80));}
+function sfxLevelup(){if(!AC)return;[262,330,392,523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.2,'triangle',.5),i*80));}
 function sfxDeath(){if(!AC)return;[440,330,220,110].forEach((f,i)=>setTimeout(()=>beep(f,.3,'sawtooth',.6),i*120));}
 function sfxSpell(type){
   if(!AC)return;
@@ -352,69 +362,184 @@ function sfxSpell(type){
   else if(type==='ice')beep(660,.2,'triangle',.4);
   else if(type==='heal'){[330,440,550].forEach((f,i)=>setTimeout(()=>beep(f,.25,'sine',.4),i*80));}
   else if(type==='thunder'){beep(55,.4,'sawtooth',.8);setTimeout(()=>beep(110,.3,'square',.5),50);}
+  else if(type==='void'){beep(110,.3,'sawtooth',.6);setTimeout(()=>beep(220,.2,'square',.3),80);}
   else beep(440,.15,'square',.4);
 }
 function sfxMegaHit(){if(!AC)return;beep(60,.5,'sawtooth',.9);setTimeout(()=>beep(40,.4,'sawtooth',.7),100);}
 function sfxInteract(){if(!AC)return;[523,659].forEach((f,i)=>setTimeout(()=>beep(f,.1,'sine',.3),i*60));}
 
-// Background music — looping chiptune melody
-const MELODY=[
-  [262,.25],[294,.25],[330,.25],[392,.5],[330,.25],[294,.25],[262,.5],
-  [220,.25],[247,.25],[262,.25],[294,.5],[262,.25],[247,.25],[220,.5],
-  [330,.25],[392,.25],[440,.5],[392,.25],[330,.25],[294,.5],
-  [262,.25],[330,.25],[392,.25],[440,.25],[523,.5],[0,.5],
+// ─── MUSIC SYSTEM ───────────────────────────────────────────────
+// Multiple melodic phrases in different modes/keys, picked randomly.
+// Arrangement dynamically adds/drops layers, inserts rests, varies tempo.
+
+const BPM_BASE=112;
+// All phrases in relative semitone offsets from root (C4=262)
+// Each entry: [semitone, duration_in_beats, 0=rest]
+const PHRASES=[
+  // Phrase A — heroic march
+  [[0,1],[2,1],[4,1],[7,2],[4,1],[2,1],[0,2],[0,0.5],[12,0.5],[11,1],[9,2],[7,2]],
+  // Phrase B — wandering
+  [[7,1],[9,1],[11,1],[12,2],[11,1],[9,1],[7,2],[-1,0.5],[0,0.5],[2,1],[4,2],[0,3]],
+  // Phrase C — melancholy
+  [[0,1.5],[3,1.5],[7,1],[5,2],[3,1],[0,1],[2,1.5],[3,1.5],[2,1],[0,4]],
+  // Phrase D — upbeat adventure
+  [[4,0.5],[4,0.5],[7,1],[9,0.5],[7,0.5],[4,1],[2,0.5],[4,0.5],[0,2],[0,0.5],[4,0.5],[7,1],[12,2]],
+  // Phrase E — mysterious
+  [[0,2],[1,0.5],[0,0.5],[3,2],[2,0.5],[0,0.5],[5,2],[4,2],[3,4]],
+  // Phrase F — triumphant
+  [[0,0.5],[0,0.5],[7,1],[0,0.5],[0,0.5],[9,1],[0,0.5],[0,0.5],[11,1],[12,2],[11,1],[9,1],[7,4]],
 ];
-const BASS=[
-  [131,.5],[131,.5],[110,.5],[110,.5],
-  [98,.5],[98,.5],[110,.5],[110,.5],
-  [131,.5],[131,.5],[147,.5],[147,.5],
-  [131,.5],[131,.5],[131,.5],[131,.5],
+
+// Bass patterns (root degrees, duration in beats, played at root-2 octaves)
+const BASS_PATS=[
+  [[0,2],[5,2],[3,2],[7,2]],
+  [[0,4],[7,2],[5,2]],
+  [[0,1],[0,1],[7,1],[5,1],[3,2],[5,2]],
+  [[0,2],[3,2],[5,2],[7,2]],
 ];
+
+// Roots in semitones from C3 for variety
+const ROOTS=[0,2,5,7]; // C, D, F, G
+let musicRoot=0, nextRoot=0;
+
+// Semitone to Hz from C3
+function stHz(st){return 130.81*Math.pow(2,st/12);}
+
+function schedPhrase(phrase,startT,root,beatLen,type,vol,dest){
+  let t=startT;
+  phrase.forEach(([st,beats])=>{
+    const dur=beats*beatLen;
+    if(st!==null&&beats>0){
+      const freq=stHz(st+root);
+      beepAt(t,freq,dur*.85,type,vol,dest);
+    }
+    t+=dur;
+  });
+  return t;
+}
+
+function schedBass(pat,startT,root,beatLen){
+  let t=startT;
+  pat.forEach(([deg,beats])=>{
+    const dur=beats*beatLen;
+    const freq=stHz(deg+root-12); // one octave down
+    beepAt(t,freq,dur*.7,'triangle',0.35,musicGain);
+    t+=dur;
+  });
+  return t;
+}
+
+function schedHats(startT,beatLen,numBeats){
+  if(!AC||muted)return;
+  for(let i=0;i<numBeats;i++){
+    const t=startT+i*beatLen;
+    const accent=i%4===0;
+    const buf=AC.createBuffer(1,Math.ceil(AC.sampleRate*0.04),AC.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let j=0;j<d.length;j++)d[j]=(Math.random()*2-1)*(1-j/d.length)*(accent?1:.4);
+    const s=AC.createBufferSource(),g=AC.createGain();
+    g.gain.value=accent?0.1:0.04;
+    s.buffer=buf;s.connect(g);g.connect(musicGain);
+    s.start(t);
+  }
+}
+
+let arSection=0, lastPhraseIdx=-1;
 
 function startMusic(){
   if(!AC||musicPlaying)return;
   musicPlaying=true;
-  let t=AC.currentTime+0.1;
-  function schedBatch(){
-    if(!musicPlaying)return;
-    const now=AC.currentTime;
-    if(t<now+1){
-      // Melody
-      let mt=t;
-      MELODY.forEach(([f,d])=>{
-        if(f>0){
-          const o=AC.createOscillator(),g=AC.createGain();
-          o.type='square';o.frequency.value=f;
-          g.gain.setValueAtTime(0.6,mt);g.gain.exponentialRampToValueAtTime(0.001,mt+d*.9);
-          o.connect(g);g.connect(musicGain);o.start(mt);o.stop(mt+d);
-        }
-        mt+=d;
-      });
-      // Bass
-      let bt=t;
-      BASS.forEach(([f,d])=>{
-        const o=AC.createOscillator(),g=AC.createGain();
-        o.type='triangle';o.frequency.value=f;
-        g.gain.setValueAtTime(0.4,bt);g.gain.exponentialRampToValueAtTime(0.001,bt+d*.8);
-        o.connect(g);g.connect(musicGain);o.start(bt);o.stop(bt+d);
-        bt+=d;
-      });
-      // Rhythm hi-hat
-      let ht=t;
-      for(let i=0;i<16;i++){
-        const buf=AC.createBuffer(1,AC.sampleRate*.05,AC.sampleRate);
-        const d2=buf.getChannelData(0);for(let j=0;j<d2.length;j++)d2[j]=(Math.random()*2-1)*(1-j/d2.length);
-        const s=AC.createBufferSource(),g=AC.createGain();
-        g.gain.value=i%4===0?0.12:0.05;
-        s.buffer=buf;s.connect(g);g.connect(musicGain);s.start(ht);
-        ht+=0.25;
-      }
-      // Advance t by full loop duration
-      t+=MELODY.reduce((s,[,d])=>s+d,0);
-    }
-    setTimeout(schedBatch,800);
+  arSection=0;
+  lastPhraseIdx=-1;
+  musicRoot=ROOTS[Math.floor(Math.random()*ROOTS.length)];
+  schedLoop();
+}
+
+// Additional phrases for more variety
+const PHRASES_EXTRA=[
+  // Phrase G — slow ballad
+  [[0,2],[4,2],[7,3],[5,1],[4,2],[2,2],[0,4]],
+  // Phrase H — fast run
+  [[0,.5],[2,.5],[4,.5],[5,.5],[7,.5],[9,.5],[11,.5],[12,1],[11,.5],[9,.5],[7,2]],
+  // Phrase I — pentatonic wander
+  [[0,1],[3,1],[5,1],[7,2],[5,1],[3,1],[0,2],[7,1],[5,1],[3,1],[0,3]],
+];
+const ALL_PHRASES=[...PHRASES,...PHRASES_EXTRA];
+
+// Chord voicings to play under melody (semitone offsets from root)
+const CHORDS=[[0,4,7],[0,3,7],[0,5,9],[0,4,7,11],[0,3,6],[0,5,7]];
+
+
+
+
+function schedLoop(){
+  if(!musicPlaying||!AC)return;
+  const now=AC.currentTime;
+  const startT=now+0.08;
+
+  // Vary tempo section by section
+  const tempoVariants=[96,108,116,104,112,120];
+  const tempo=tempoVariants[arSection%tempoVariants.length]+(Math.random()>0.8?4:0);
+  const beat=60/tempo;
+
+  // Pick phrase — avoid immediate repeats
+  let pIdx;
+  do{pIdx=Math.floor(Math.random()*ALL_PHRASES.length);}while(pIdx===lastPhraseIdx&&ALL_PHRASES.length>1);
+  lastPhraseIdx=pIdx;
+  const phrase=ALL_PHRASES[pIdx];
+
+  // Occasionally modulate key
+  if(arSection>0&&Math.random()>0.6){
+    const intervals=[0,5,7,2,9,4]; // common modulations
+    musicRoot=(musicRoot+intervals[Math.floor(Math.random()*intervals.length)])%24;
   }
-  schedBatch();
+
+  const root=musicRoot;
+  const phraseDur=phrase.reduce((s,[,d])=>s+d,0)*beat;
+
+  // ── Layer 1: Melody (always) ──
+  schedPhrase(phrase,startT,root+12,beat,'square',0.5,musicGain);
+
+  // ── Layer 2: Harmony 3rd above (60%) ──
+  if(Math.random()>0.4){
+    // Offset slightly for call-and-response feel
+    const harmOffset=Math.random()>0.5?beat:0;
+    schedPhrase(phrase,startT+harmOffset,root+16,beat,'triangle',0.2,musicGain);
+  }
+
+  // ── Layer 3: Counter-melody (35%, different phrase, offset by half) ──
+  if(Math.random()>0.65&&arSection>0){
+    const cp2=ALL_PHRASES[(pIdx+3)%ALL_PHRASES.length];
+    schedPhrase(cp2,startT+beat*0.5,root+12,beat,'sine',0.15,musicGain);
+  }
+
+  // ── Layer 4: Pad chords (40%) — long held notes ──
+  if(Math.random()>0.6){
+    const chord=CHORDS[Math.floor(Math.random()*CHORDS.length)];
+    chord.forEach(st=>{
+      beepAt(startT,stHz(st+root),phraseDur*.9,'sine',0.08,musicGain);
+    });
+  }
+
+  // ── Layer 5: Bass (75%) ──
+  if(Math.random()>0.25){
+    const bassPat=BASS_PATS[Math.floor(Math.random()*BASS_PATS.length)];
+    schedBass(bassPat,startT,root,beat);
+  }
+
+  // ── Layer 6: Percussion (65%) ──
+  if(Math.random()>0.35){
+    const numBeats=Math.floor(phraseDur/beat);
+    schedHats(startT,beat,numBeats);
+  }
+
+  // ── Dramatic rest gap (20% chance after section 2) ──
+  const restGap=arSection>2&&Math.random()>0.8?beat*3:0;
+  const totalDur=phraseDur+restGap;
+
+  arSection++;
+  // Schedule next phrase to start just before this one ends (seamless)
+  setTimeout(schedLoop, Math.max(80,(totalDur-0.15)*1000));
 }
 
 function stopMusic(){musicPlaying=false;}
@@ -446,44 +571,85 @@ function initTiles(){
 function gT(t,tx,ty,fr){const v=(tx*7+ty*13)%4;switch(t){case TR.G:return TILES[`g${v%4}`];case TR.W:return TILES[`w${fr%3}`];case TR.DP:return TILES['dp'];case TR.F:return TILES[`f${v%4}`];case TR.S:return TILES[`s${v%4}`];case TR.ST:return TILES[`st${v%4}`];case TR.D:return TILES[`dk${v%4}`];case TR.DK:return TILES[`dock${v%2}`];default:return TILES['g0'];}}
 
 // ═══════════════════════════════════════
-// INFINITE WORLD (pure seeded noise, no array)
+// INFINITE WORLD — smooth noise, no walls
 // ═══════════════════════════════════════
-// Returns tile type for ANY (x,y) coordinate
-function getTileAt(tx,ty){
-  // Fixed village zone
-  if(tx>=10&&tx<=16&&ty>=12&&ty<=17) return TR.G;
-  if(tx>=9&&tx<=16&&ty===18) return TR.DK;
-  // Ocean border far from center — world has water at distance > 55 tiles
-  const distC=Math.sqrt((tx-13)**2+(ty-14.5)**2);
-  if(distC>58) return TR.DP;
-  if(distC>55) return TR.W;
-  // Named zones (original layout preserved)
-  if(tx>=22&&tx<=34&&ty>=4&&ty<=18) return TR.F;
-  if(ty>=22&&ty<=30&&tx>=12&&tx<=34) return TR.S;
-  if(tx>=38&&tx<=47&&ty>=26&&ty<=36) return TR.D;
-  if(tx>=42&&tx<=47&&ty>=28&&ty<=33) return TR.ST;
-  // Expanded zones past original borders
-  if(tx>47&&ty>22&&ty<40) return TR.D;    // Deep dungeon east
-  if(tx>40&&ty<8) return TR.ST;           // Stone highlands north-east
-  if(tx>34&&ty>=4&&ty<=22) return TR.F;   // Extended forest
-  if(ty>30&&tx>=5&&tx<=40) return TR.S;   // Extended desert south
-  // Far-out special zones (new biomes as you explore)
-  if(tx<-10&&Math.abs(ty-14)<12) return TR.F;   // West forest
-  if(ty<-5&&Math.abs(tx-13)<20) return TR.ST;   // North mountains
-  if(tx>60&&Math.abs(ty-14)<15) return TR.D;    // Far east dungeon
-  if(ty>45&&Math.abs(tx-13)<25) return TR.S;    // Far south desert
-  // Procedural wilds using seeded noise
-  const r=sr(tx*97+ty*31);
-  const r2=sr(tx*43+ty*67+999);
-  // Water rivers/lakes
-  const nx=Math.sin(tx*.18)*Math.cos(ty*.12);
-  if(nx>0.75&&distC>20) return TR.W;
-  return r<.42?TR.G:r<.58?TR.F:r<.70?TR.S:r<.78?TR.ST:r2<.3?TR.D:TR.G;
+// Multi-octave value noise: smooth, no hard edges
+function noise2(x,y,seed=0){
+  // 4 octaves of smooth value noise
+  let v=0,amp=1,freq=1,tot=0;
+  for(let o=0;o<4;o++){
+    const fx=x*freq*0.07+seed*13.7,fy=y*freq*0.07+seed*7.3;
+    const ix=Math.floor(fx),iy=Math.floor(fy);
+    const fx2=fx-ix,fy2=fy-iy;
+    // Smoothstep
+    const ux=fx2*fx2*(3-2*fx2),uy=fy2*fy2*(3-2*fy2);
+    const a=sr(ix*127+iy*311+seed*97);
+    const b=sr((ix+1)*127+iy*311+seed*97);
+    const c=sr(ix*127+(iy+1)*311+seed*97);
+    const d=sr((ix+1)*127+(iy+1)*311+seed*97);
+    v+=amp*(a+(b-a)*ux+(c-a)*uy+(a-b-c+d)*ux*uy);
+    tot+=amp;amp*=.5;freq*=2;
+  }
+  return v/tot; // 0..1
 }
 
-function wk(tx,ty){
-  const t=getTileAt(Math.floor(tx),Math.floor(ty));
-  if(TBLOCK.has(t)) return G&&G.shipBuilt;
+// Returns tile type for ANY integer (tx,ty) — fully deterministic, no hard borders
+function getTileAt(tx,ty){
+  // Hard-protected village clearing — always walkable grass
+  if(tx>=9&&tx<=17&&ty>=11&&ty<=18){
+    if(tx>=9&&tx<=16&&ty===18) return TR.DK;
+    return TR.G;
+  }
+
+  const dist=Math.sqrt((tx-13)**2+(ty-14.5)**2);
+
+  // Water is RARE — only appears as small lakes (threshold very high = ~6% coverage)
+  // Never appears within dist 18 of village so early game has no water walls
+  if(dist>18){
+    const waterN=noise2(tx,ty,5);
+    const deepN =noise2(tx,ty,6);
+    // threshold 0.92 → ~8% water tiles, well-spaced blobs not walls
+    const waterThresh=0.92-Math.max(0,dist-60)*0.002; // slowly more water far out
+    if(waterN>waterThresh){
+      return deepN>0.65?TR.DP:TR.W;
+    }
+  }
+
+  const biomeN =noise2(tx,ty,1);
+  const biomeN2=noise2(tx,ty,2);
+  const biomeN3=noise2(tx,ty,3);
+  const tempN  =noise2(tx,ty,4);
+
+  // Near village: gentle grassland
+  if(dist<12){
+    if(biomeN>0.72&&dist>7) return TR.F;
+    return TR.G;
+  }
+
+  // All remaining tiles are walkable — purely noise-driven biome selection
+  if(tempN>0.82) return TR.ST;
+  if(tempN>0.70&&biomeN2>0.58) return TR.D;
+  if(biomeN>0.74) return TR.F;
+  if(biomeN>0.56&&tempN<0.44) return TR.F;
+  if(biomeN<0.26||tempN<0.20) return TR.S;
+  if(biomeN3>0.80&&dist>15) return TR.ST;
+  if(biomeN3<0.16&&tempN>0.58&&dist>18) return TR.D;
+  return TR.G;
+}
+
+// AABB collision with radius — checks all 4 corners of player hitbox
+// R = half-size of player bounding box in tile units
+const PHIT=0.35; // player collision radius (slightly less than 0.5 tile)
+function tileBlocked(tx,ty){
+  if(G&&G.shipBuilt) return false;
+  return TBLOCK.has(getTileAt(Math.floor(tx),Math.floor(ty)));
+}
+function wk(cx,cy){
+  // Check all 4 corners of AABB
+  if(tileBlocked(cx-PHIT,cy-PHIT)) return false;
+  if(tileBlocked(cx+PHIT,cy-PHIT)) return false;
+  if(tileBlocked(cx-PHIT,cy+PHIT)) return false;
+  if(tileBlocked(cx+PHIT,cy+PHIT)) return false;
   return true;
 }
 function dv(x,y){return Math.sqrt((x-VCX)**2+(y-VCY)**2);}
@@ -670,8 +836,10 @@ function tick(dt){
   if(dx||dy){
     const mg=Math.sqrt(dx*dx+dy*dy);dx/=mg;dy/=mg;
     const sp=G.spd*dt;
-    if(wk(G.pos.x+dx*sp,G.pos.y))G.pos.x+=dx*sp;
-    if(wk(G.pos.x,G.pos.y+dy*sp))G.pos.y+=dy*sp;
+    const nx=G.pos.x+dx*sp, ny=G.pos.y+dy*sp;
+    if(wk(nx,ny)){G.pos.x=nx;G.pos.y=ny;}          // full move
+    else if(wk(nx,G.pos.y)){G.pos.x=nx;}            // slide on Y wall
+    else if(wk(G.pos.x,ny)){G.pos.y=ny;}            // slide on X wall
     if(Math.abs(dx)>Math.abs(dy)){if(dx<0)G.dir='left';else G.dir='right';}
     else{if(dy<0)G.dir='up';else G.dir='down';}
   }
