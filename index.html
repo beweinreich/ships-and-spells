@@ -93,8 +93,9 @@ display:flex;align-items:center;justify-content:center;cursor:pointer;position:r
 /* ── LOG ── */
 #log{height:62px;background:#040608;border-top:1px solid var(–border);padding:3px 8px;overflow-y:auto;flex-shrink:0;}
 #log::-webkit-scrollbar{width:2px;}.ll{font-family:‘VT323’,monospace;font-size:12px;line-height:1.5;}
-.ll.combat{color:#fca5a5;}.ll.loot{color:var(–gold);}.ll.spell{color:var(–wc);}
-.ll.info{color:var(–green);}.ll.sys{color:var(–dim);}.ll.mega{color:#ff6b00;}
+.ll.riddle{color:#34d399;}.ll.quest{color:#60a5fa;}
+.notif.hp{color:#4ade80;border-color:rgba(74,222,128,.4);}
+.notif.riddle{color:#60a5fa;border-color:rgba(96,165,250,.4);}
 
 /* ── MODAL ── */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(2px);padding:14px;}
@@ -124,6 +125,13 @@ display:flex;align-items:center;justify-content:center;cursor:pointer;position:r
 
 /* ── SAFE HINT ── */
 #sh{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(10,14,26,.85);border:1px solid rgba(16,185,129,.35);color:#10b981;font-size:5.5px;padding:5px 10px;z-index:20;pointer-events:none;white-space:nowrap;opacity:1;transition:opacity 1.2s;}
+/* Boost bar — above left joystick */
+#boost-bar-wrap{position:absolute;left:10px;bottom:138px;width:118px;display:flex;flex-direction:column;align-items:center;gap:3px;z-index:20;pointer-events:none;}
+#boost-icon{font-size:11px;line-height:1;}
+#boost-track{width:90px;height:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:3px;overflow:hidden;}
+#boost-fill{height:100%;width:100%;background:#10b981;border-radius:3px;transition:background .2s;}
+#boost-label{font-size:5px;color:#10b981;letter-spacing:.5px;font-family:‘Press Start 2P’,monospace;}
+#boost-sub{font-size:5px;color:#10b981;letter-spacing:.5px;font-family:‘Press Start 2P’,monospace;}
 
 /* ── AIM INDICATOR (desktop) ── */
 #aim-cursor{position:absolute;width:20px;height:20px;border:2px solid rgba(255,255,255,.5);border-radius:50%;pointer-events:none;z-index:15;transform:translate(-50%,-50%);display:none;}
@@ -187,6 +195,23 @@ border:1px solid rgba(167,139,250,.4);display:flex;align-items:center;justify-co
 #bk,#dr{display:none!important;}
 #mute-btn{display:block;}
 }
+/* ── RIDDLE MODAL ── */
+#rdl-ov{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:110;backdrop-filter:blur(3px);padding:14px;}
+#rdl-ov.on{display:flex;}
+#rdl-box{background:linear-gradient(160deg,#0d1428,#060b14);border:1px solid #34d399;padding:20px;width:min(400px,94vw);box-shadow:0 0 40px rgba(52,211,153,.2);}
+#rdl-box h2{color:#34d399;font-size:clamp(8px,2.5vw,10px);margin-bottom:10px;}
+#rdl-q{font-size:clamp(6px,1.8vw,7.5px);color:#b0bec5;line-height:2.4;margin-bottom:12px;font-family:‘VT323’,monospace;font-size:14px;}
+#rdl-inp{width:100%;background:rgba(255,255,255,.05);border:1px solid #34d399;color:#e8eaf0;font-family:‘Press Start 2P’,monospace;font-size:8px;padding:8px 10px;outline:none;margin-bottom:10px;box-sizing:border-box;}
+#rdl-inp:focus{border-color:#6ee7b7;box-shadow:0 0 12px rgba(52,211,153,.3);}
+#rdl-btns{display:flex;gap:8px;}
+/* ── DAY/NIGHT ── */
+#dn-ov{position:fixed;inset:0;pointer-events:none;z-index:79;transition:background .8s;}
+/* ── LOOT DROPS ── */
+.loot-notif{color:#fbbf24;border-color:rgba(251,191,36,.4);}
+/* ── STATS PANE ── */
+.stat-row{display:flex;justify-content:space-between;font-size:5.5px;padding:4px 0;border-bottom:1px solid rgba(30,42,58,.6);}
+.stat-row span:first-child{color:var(–dim);}
+.stat-row span:last-child{color:#e8eaf0;}
 @keyframes fi{from{opacity:0;}to{opacity:1;}}
 @keyframes ni{from{opacity:0;transform:translateX(18px);}to{opacity:1;transform:translateX(0);}}
 @keyframes no{from{opacity:1;}to{opacity:0;}}
@@ -233,6 +258,7 @@ border:1px solid rgba(167,139,250,.4);display:flex;align-items:center;justify-co
     <div class="stat"><label>💰</label><span id="go">5</span></div>
     <div class="stat"><label>🪵</label><span id="wo">0</span></div>
     <div class="stat"><label>💎</label><span id="ge">0</span></div>
+    <div class="stat"><label>⚙️</label><span id="mt">0</span></div>
     <span class="albl2" id="al">🏡 THE VILLAGE</span>
   </div>
   <div id="mid">
@@ -252,17 +278,24 @@ border:1px solid rgba(167,139,250,.4);display:flex;align-items:center;justify-co
       <button id="pb" style="display:none;">☰ BAG</button>
       <button id="mute-btn" style="display:none;">🔊</button>
       <div id="sh">🏡 Safe zone — explore outward to find monsters!</div>
+      <div id="boost-bar-wrap">
+        <div id="boost-label">💨 BOOST</div>
+        <div id="boost-track"><div id="boost-fill"></div></div>
+        <div id="boost-sub"></div>
+      </div>
     </div>
     <div id="side">
       <div class="tabs">
         <button class="tab on" data-tab="inv">BAG</button>
         <button class="tab" data-tab="sp2">SPELLS</button>
         <button class="tab" data-tab="sh2">SHIPS</button>
+        <button class="tab" data-tab="st2">STATS</button>
         <button class="tab" data-tab="map">MAP</button>
       </div>
       <div class="pane on" id="p-inv"></div>
       <div class="pane" id="p-sp2"></div>
       <div class="pane" id="p-sh2"></div>
+      <div class="pane" id="p-st2"></div>
       <div class="pane" id="p-map">
         <div class="sec-t">World Map</div>
         <canvas id="mc" width="182" height="152"></canvas>
@@ -285,21 +318,39 @@ border:1px solid rgba(167,139,250,.4);display:flex;align-items:center;justify-co
     <button class="tab on" data-tab="inv">BAG</button>
     <button class="tab" data-tab="sp2">SPELLS</button>
     <button class="tab" data-tab="sh2">SHIPS</button>
+    <button class="tab" data-tab="st2">STATS</button>
     <button class="tab" data-tab="map">MAP</button>
   </div>
   <div class="pane on" id="dp-inv"></div>
   <div class="pane" id="dp-sp2"></div>
   <div class="pane" id="dp-sh2"></div>
+  <div class="pane" id="dp-st2"></div>
   <div class="pane" id="dp-map">
     <div class="sec-t">World Map</div>
     <canvas id="mcd" width="230" height="192" style="width:100%;image-rendering:pixelated;border:1px solid var(--border);"></canvas>
-    <div class="ml">🟩 Village · 🌲 Forest · 🏜 Desert<br>🌊 Ocean · 🔴 Dungeon · ⭐ Mega<br><span style="color:#fff">● You</span></div>
+    <div class="ml">🟩 Grass · 🌲 Forest · 🏜 Desert · 🌊 Ocean<br>🎃 Shadowmere · ❄️ Frostholm · 🏜️ Dunesreach<br>🌿 Verdant Deep · 🌋 Ignis Forge · ⚓ Skull Port<br>⭐ Mega Lair · <span style="color:#fff">● You</span></div>
   </div>
 </div>
 
 <div id="notifs"></div>
 <div id="df"></div>
 <div id="mf"></div>
+<div id="dn-ov"></div>
+
+<!-- Riddle Modal -->
+
+<div id="rdl-ov">
+  <div id="rdl-box">
+    <div class="portrait" id="rdl-ico" style="font-size:36px;text-align:center;margin-bottom:8px;"></div>
+    <h2 id="rdl-title">🧩 RIDDLE</h2>
+    <div id="rdl-q"></div>
+    <input id="rdl-inp" type="text" placeholder="Type your answer..." autocomplete="off" spellcheck="false"/>
+    <div id="rdl-btns">
+      <button class="gb" id="rdl-submit">Submit Answer</button>
+      <button class="gb" style="border-color:var(--red);color:var(--red);" id="rdl-skip">Flee (−20 HP)</button>
+    </div>
+  </div>
+</div>
 
 <script>
 'use strict';
@@ -309,7 +360,7 @@ border:1px solid rgba(167,139,250,.4);display:flex;align-items:center;justify-co
 const TS=16, T=44;
 const TR={G:0,W:1,F:2,S:3,ST:4,D:5,DP:6,DK:7};
 const TBLOCK=new Set([TR.W,TR.DP]);
-const VCX=13, VCY=14.5, SAFE_R=7, GRACE=10;
+const VCX=13, VCY=14.5, SAFE_R=70, GRACE=10;
 
 // ═══════════════════════════════════════
 // AUDIO ENGINE
@@ -575,7 +626,8 @@ function gT(t,tx,ty,fr){const v=(tx*7+ty*13)%4;switch(t){case TR.G:return TILES[
 // ═══════════════════════════════════════
 // Multi-octave value noise: smooth, no hard edges
 function noise2(x,y,seed=0){
-  // 4 octaves of smooth value noise
+  // Divide by 10 so biomes are 10x bigger = 10x larger world
+  x*=0.1; y*=0.1;
   let v=0,amp=1,freq=1,tot=0;
   for(let o=0;o<4;o++){
     const fx=x*freq*0.07+seed*13.7,fy=y*freq*0.07+seed*7.3;
@@ -593,9 +645,39 @@ function noise2(x,y,seed=0){
   return v/tot; // 0..1
 }
 
-// Returns tile type for ANY integer (tx,ty) — fully deterministic, no hard borders
+// Tile cache — getTileAt is called hundreds of times per frame; cache results
+const tileCache=new Map();
 function getTileAt(tx,ty){
-  // Hard-protected village clearing — always walkable grass
+  const key=(tx<<16)^ty; // fast int key (works for coords up to ±32767)
+  const cached=tileCache.get(key);
+  if(cached!==undefined)return cached;
+  const result=_computeTileAt(tx,ty);
+  if(tileCache.size>100000)tileCache.clear(); // hard cap; rarely hit
+  tileCache.set(key,result);
+  return result;
+}
+function _computeTileAt(tx,ty){
+  // Check if inside a named town clearing
+  for(const town of TOWNS){
+    const td=Math.sqrt((tx-town.cx)**2+(ty-town.cy)**2);
+    if(td<town.r){
+      // Town center is always walkable, biome-themed
+      if(town.biome==='G') return TR.G;
+      if(town.biome==='D') return TR.D;
+      if(town.biome==='ST')return TR.ST;
+      if(town.biome==='S') return TR.S;
+      if(town.biome==='F') return TR.F;
+      if(town.biome==='DK')return TR.DK;
+      return TR.G;
+    }
+    // Town approach road — grass strip leading toward village
+    if(td<town.r+4){
+      const roadN=noise2(tx*3,ty*3,99);
+      if(roadN>0.45)return TR.G;
+    }
+  }
+
+  // Home village hard-protected clearing
   if(tx>=9&&tx<=17&&ty>=11&&ty<=18){
     if(tx>=9&&tx<=16&&ty===18) return TR.DK;
     return TR.G;
@@ -603,15 +685,16 @@ function getTileAt(tx,ty){
 
   const dist=Math.sqrt((tx-13)**2+(ty-14.5)**2);
 
-  // Water is RARE — only appears as small lakes (threshold very high = ~6% coverage)
-  // Never appears within dist 18 of village so early game has no water walls
-  if(dist>18){
+  // Ocean — appears starting at dist>120, wraps around the world
+  // Use a more generous threshold so it's clearly visible
+  if(dist>120){
     const waterN=noise2(tx,ty,5);
     const deepN =noise2(tx,ty,6);
-    // threshold 0.92 → ~8% water tiles, well-spaced blobs not walls
-    const waterThresh=0.92-Math.max(0,dist-60)*0.002; // slowly more water far out
+    // Closer to edge = more ocean probability
+    const oceanBias=Math.min(1,(dist-120)/200);
+    const waterThresh=0.78-(oceanBias*0.18);
     if(waterN>waterThresh){
-      return deepN>0.65?TR.DP:TR.W;
+      return deepN>0.6?TR.DP:TR.W;
     }
   }
 
@@ -620,20 +703,19 @@ function getTileAt(tx,ty){
   const biomeN3=noise2(tx,ty,3);
   const tempN  =noise2(tx,ty,4);
 
-  // Near village: gentle grassland
-  if(dist<12){
-    if(biomeN>0.72&&dist>7) return TR.F;
+  // Inner grassland ring near village
+  if(dist<80){
+    if(biomeN>0.72&&dist>50) return TR.F;
     return TR.G;
   }
 
-  // All remaining tiles are walkable — purely noise-driven biome selection
   if(tempN>0.82) return TR.ST;
   if(tempN>0.70&&biomeN2>0.58) return TR.D;
   if(biomeN>0.74) return TR.F;
   if(biomeN>0.56&&tempN<0.44) return TR.F;
   if(biomeN<0.26||tempN<0.20) return TR.S;
-  if(biomeN3>0.80&&dist>15) return TR.ST;
-  if(biomeN3<0.16&&tempN>0.58&&dist>18) return TR.D;
+  if(biomeN3>0.80&&dist>100) return TR.ST;
+  if(biomeN3<0.16&&tempN>0.58&&dist>120) return TR.D;
   return TR.G;
 }
 
@@ -657,6 +739,18 @@ function dv(x,y){return Math.sqrt((x-VCX)**2+(y-VCY)**2);}
 // ═══════════════════════════════════════
 // GAME DATA
 // ═══════════════════════════════════════
+// Pirate weapons — each has varied speed, size, damage
+const PIRWEPS=[
+  {id:'cutlass',  name:'Cutlass',    ico:'⚔️', type:'melee', dmg:22, spd:0,   size:1.8, cd:.35, col:'#fb923c'},
+  {id:'pistol',   name:'Pistol',     ico:'🔫', type:'ranged',dmg:30, spd:11,  size:1,   cd:.6,  col:'#facc15', ico2:'💥'},
+  {id:'musket',   name:'Musket',     ico:'🎯', type:'ranged',dmg:55, spd:14,  size:0.9, cd:1.2, col:'#f59e0b', ico2:'💥'},
+  {id:'blunderbuss',name:'Blunderbuss',ico:'💣',type:'ranged',dmg:40, spd:8,   size:1.4, cd:.9,  col:'#ff6b00', ico2:'💥', spread:3},
+  {id:'ironblade',name:'Iron Sword', ico:'🗡️', type:'melee', dmg:38, spd:0,   size:2.0, cd:.4,  col:'#94a3b8'},
+  {id:'cannon',   name:'Cannon',     ico:'💣', type:'ranged',dmg:80, spd:7,   size:1.6, cd:2.0, col:'#ef4444', ico2:'💥', spread:1},
+];
+// HP gem pickups in world
+let hpGems=[];
+
 const SPELLS=[
   {id:'fireball', name:'Fireball', ico:'🔥',desc:'Fire bolt 3 tiles.',  dmg:28,range:3,color:'#f97316'},
   {id:'lightning',name:'Lightning',ico:'⚡',desc:'Fast 4-tile strike.', dmg:42,range:4,color:'#facc15'},
@@ -667,43 +761,256 @@ const SPELLS=[
   {id:'void',     name:'Void Bolt',ico:'🌀',desc:'Ultimate 80 dmg.',  dmg:80,range:5,color:'#a78bfa'},
 ];
 const RMON=[
-  {id:'slime',   name:'Slime',   ico:'🟢',hp:25,atk:7, xp:10,gold:3, wood:2, gem:0,spd:.9},
-  {id:'bat',     name:'Bat',     ico:'🦇',hp:20,atk:6, xp:8, gold:2, wood:0, gem:0,spd:1.5},
-  {id:'spider',  name:'Spider',  ico:'🕷️',hp:35,atk:10,xp:18,gold:5, wood:0, gem:1,spd:1.2},
-  {id:'wolf',    name:'Wolf',    ico:'🐺',hp:50,atk:14,xp:25,gold:7, wood:3, gem:0,spd:1.3},
-  {id:'goblin',  name:'Goblin',  ico:'👺',hp:45,atk:12,xp:22,gold:8, wood:8, gem:1,spd:1.0},
-  {id:'scorpion',name:'Scorpion',ico:'🦂',hp:40,atk:13,xp:20,gold:6, wood:0, gem:2,spd:1.1},
-  {id:'ogre',    name:'Ogre',    ico:'👹',hp:80,atk:20,xp:45,gold:18,wood:12,gem:1,spd:.6},
-  {id:'skeleton',name:'Skeleton',ico:'💀',hp:55,atk:15,xp:28,gold:10,wood:5, gem:0,spd:.9},
-  {id:'ghost',   name:'Ghost',   ico:'👻',hp:40,atk:11,xp:20,gold:6, wood:0, gem:2,spd:1.1},
-  {id:'troll',   name:'Troll',   ico:'👾',hp:90,atk:22,xp:55,gold:20,wood:15,gem:2,spd:.55},
+  {id:'slime',   name:'Slime',   ico:'🟢',hp:25, atk:7, xp:10,gold:3, wood:2, gem:0,metal:0,spd:.9},
+  {id:'bat',     name:'Bat',     ico:'🦇',hp:20, atk:6, xp:8, gold:2, wood:0, gem:0,metal:0,spd:1.5},
+  {id:'spider',  name:'Spider',  ico:'🕷️',hp:35, atk:10,xp:18,gold:5, wood:0, gem:1,metal:1,spd:1.2},
+  {id:'wolf',    name:'Wolf',    ico:'🐺',hp:50, atk:14,xp:25,gold:7, wood:3, gem:0,metal:0,spd:1.3},
+  {id:'goblin',  name:'Goblin',  ico:'👺',hp:45, atk:12,xp:22,gold:8, wood:8, gem:1,metal:2,spd:1.0},
+  {id:'scorpion',name:'Scorpion',ico:'🦂',hp:40, atk:13,xp:20,gold:6, wood:0, gem:2,metal:1,spd:1.1},
+  {id:'ogre',    name:'Ogre',    ico:'👹',hp:80, atk:20,xp:45,gold:18,wood:12,gem:1,metal:3,spd:.6},
+  {id:'skeleton',name:'Skeleton',ico:'💀',hp:55, atk:15,xp:28,gold:10,wood:5, gem:0,metal:2,spd:.9},
+  {id:'ghost',   name:'Ghost',   ico:'👻',hp:40, atk:11,xp:20,gold:6, wood:0, gem:2,metal:0,spd:1.1},
+  {id:'troll',   name:'Troll',   ico:'👾',hp:90, atk:22,xp:55,gold:20,wood:15,gem:2,metal:4,spd:.55},
+  // Fireball shooters
+  {id:'imp',     name:'Imp',     ico:'😈',hp:35, atk:18,xp:30,gold:8, wood:0, gem:2,metal:1,spd:1.0,ranged:true,spell:'🔥',sDmg:20,sCol:'#f97316',sSpd:7},
+  {id:'draglet', name:'Draglet', ico:'🐉',hp:60, atk:24,xp:45,gold:14,wood:0, gem:3,metal:2,spd:.9, ranged:true,spell:'🔥',sDmg:28,sCol:'#ff6b00',sSpd:8},
+  {id:'warlock', name:'Warlock', ico:'🧟',hp:70, atk:22,xp:52,gold:16,wood:0, gem:4,metal:3,spd:.8, ranged:true,spell:'💀',sDmg:32,sCol:'#a78bfa',sSpd:6},
 ];
 const MEGA=[
-  {id:'magma', name:'MAGMA TITAN',   ico:'🌋',hp:350,atk:40,xp:200,gold:45,wood:25,gem:10,spd:.5, mega:true,gc:'rgba(255,80,0,.6)',  dm:'The Magma Titan erupts!'},
-  {id:'skl',   name:'SKELETON LORD', ico:'💀',hp:300,atk:38,xp:180,gold:40,wood:12,gem:8, spd:.65,mega:true,gc:'rgba(200,200,255,.5)',dm:'The Skeleton Lord crumbles!'},
-  {id:'demon', name:'DEMON OVERLORD',ico:'😈',hp:500,atk:55,xp:280,gold:65,wood:20,gem:18,spd:.6, mega:true,gc:'rgba(200,0,0,.7)',   dm:'The Demon is banished!'},
-  {id:'kraken',name:'THE KRAKEN',    ico:'🐙',hp:420,atk:48,xp:240,gold:55,wood:35,gem:14,spd:.45,mega:true,gc:'rgba(0,180,180,.5)', dm:'The Kraken sinks!'},
-  {id:'col',   name:'STONE COLOSSUS',ico:'🗿',hp:650,atk:65,xp:350,gold:90,wood:18,gem:25,spd:.3, mega:true,gc:'rgba(200,180,100,.5)',dm:'The Colossus shatters!'},
+  {id:'magma', name:'MAGMA TITAN',   ico:'🌋',hp:350,atk:40,xp:200,gold:45,wood:25,gem:10,metal:15,spd:.5, mega:true,gc:'rgba(255,80,0,.6)',  dm:'The Magma Titan erupts!'},
+  {id:'skl',   name:'SKELETON LORD', ico:'💀',hp:300,atk:38,xp:180,gold:40,wood:12,gem:8, metal:12,spd:.65,mega:true,gc:'rgba(200,200,255,.5)',dm:'The Skeleton Lord crumbles!'},
+  {id:'demon', name:'DEMON OVERLORD',ico:'😈',hp:500,atk:55,xp:280,gold:65,wood:20,gem:18,metal:20,spd:.6, mega:true,gc:'rgba(200,0,0,.7)',   dm:'The Demon is banished!'},
+  {id:'kraken',name:'THE KRAKEN',    ico:'🐙',hp:420,atk:48,xp:240,gold:55,wood:35,gem:14,metal:18,spd:.45,mega:true,gc:'rgba(0,180,180,.5)', dm:'The Kraken sinks!'},
+  {id:'col',   name:'STONE COLOSSUS',ico:'🗿',hp:650,atk:65,xp:350,gold:90,wood:18,gem:25,metal:30,spd:.3, mega:true,gc:'rgba(200,180,100,.5)',dm:'The Colossus shatters!'},
 ];
 const FF=[
-  {id:'rwiz', faction:'wizard',name:'Rogue Wizard',  ico:'🧙‍♂️',hp:60,atk:18,xp:35,gold:14,wood:0,gem:3,spd:.8, ranged:true, spell:'🔥',sDmg:22,sCol:'#f97316'},
-  {id:'dmage',faction:'wizard',name:'Dark Mage',     ico:'🔮',  hp:80,atk:22,xp:50,gold:20,wood:0,gem:5,spd:.7, ranged:true, spell:'🌀',sDmg:30,sCol:'#a78bfa'},
-  {id:'hwitch',faction:'wizard',name:'Hex Witch',    ico:'🧙‍♀️',hp:70,atk:20,xp:42,gold:16,wood:0,gem:4,spd:.85,ranged:true, spell:'⚡',sDmg:26,sCol:'#facc15'},
-  {id:'bucc', faction:'pirate',name:'Buccaneer',     ico:'☠️',  hp:65,atk:20,xp:38,gold:15,wood:8, gem:0,spd:.9, ranged:false},
-  {id:'cors', faction:'pirate',name:'Corsair',       ico:'🗡️',  hp:85,atk:25,xp:55,gold:22,wood:10,gem:2,spd:.8, ranged:false},
-  {id:'pm',   faction:'pirate',name:'Powder Monkey', ico:'💣',  hp:50,atk:28,xp:45,gold:18,wood:5, gem:1,spd:.75,ranged:true, spell:'💣',sDmg:32,sCol:'#f59e0b'},
+  {id:'rwiz', faction:'wizard',name:'Rogue Wizard',  ico:'🧙‍♂️',hp:60,atk:18,xp:35,gold:14,wood:0,gem:3,metal:2,spd:.8, ranged:true, spell:'🔥',sDmg:22,sCol:'#f97316',sSpd:7},
+  {id:'dmage',faction:'wizard',name:'Dark Mage',     ico:'🔮',  hp:80,atk:22,xp:50,gold:20,wood:0,gem:5,metal:3,spd:.7, ranged:true, spell:'🌀',sDmg:30,sCol:'#a78bfa',sSpd:6},
+  {id:'hwitch',faction:'wizard',name:'Hex Witch',    ico:'🧙‍♀️',hp:70,atk:20,xp:42,gold:16,wood:0,gem:4,metal:2,spd:.85,ranged:true, spell:'⚡',sDmg:26,sCol:'#facc15',sSpd:9},
+  {id:'bucc', faction:'pirate',name:'Buccaneer',     ico:'☠️',  hp:65,atk:20,xp:38,gold:15,wood:8, gem:0,metal:3,spd:.9, ranged:false},
+  {id:'cors', faction:'pirate',name:'Corsair',       ico:'🗡️',  hp:85,atk:25,xp:55,gold:22,wood:10,gem:2,metal:4,spd:.8, ranged:false},
+  {id:'pm',   faction:'pirate',name:'Powder Monkey', ico:'💣',  hp:50,atk:28,xp:45,gold:18,wood:5, gem:1,metal:2,spd:.75,ranged:true, spell:'💣',sDmg:32,sCol:'#f59e0b',sSpd:8},
 ];
+// Riddles for the Riddler NPCs
+const RIDDLES=[
+  {q:"I have cities with no houses, mountains with no trees, water with no fish. What am I?",a:["map","a map"],xp:50},
+  {q:"The more you take, the more you leave behind. What am I?",a:["footsteps","steps","footprints"],xp:50},
+  {q:"I speak without a mouth and hear without ears. I have no body but come alive with wind. What am I?",a:["echo","an echo"],xp:60},
+  {q:"What has keys but no locks, space but no room, and you can enter but can't go inside?",a:["keyboard","a keyboard"],xp:55},
+  {q:"I'm light as a feather but even the strongest man can't hold me for more than a few minutes. What am I?",a:["breath","your breath"],xp:50},
+  {q:"What can travel around the world while staying in one corner?",a:["stamp","a stamp","postage stamp"],xp:60},
+  {q:"What gets wetter the more it dries?",a:["towel","a towel"],xp:45},
+  {q:"I have hands but can't clap. What am I?",a:["clock","a clock","watch"],xp:45},
+];
+// ═══════════════════════════════════════
+// TOWNS — named settlements across the world
+// ═══════════════════════════════════════
+const TOWNS=[
+  // Hub village — starting area
+  {id:'village',  name:'Emberwick',    cx:13,  cy:14.5,r:8,  biome:'G', ico:'🏡',
+   desc:'The peaceful starting village. All classes welcome.',
+   color:'#3a7d1a', mapColor:'#4a9d2a'},
+
+  // Haunted town — spooky, NW
+  {id:'shadow',   name:'Shadowmere',   cx:-80, cy:-60, r:10, biome:'D', ico:'🎃',
+   desc:'A cursed town of ghosts and jack-o-lanterns. The Headless Horseman patrols at night.',
+   color:'#200808', mapColor:'#6b21a8'},
+
+  // Ice town — frozen, NE
+  {id:'frost',    name:'Frostholm',    cx:120, cy:-90, r:10, biome:'ST',ico:'❄️',
+   desc:'A frozen settlement. Ice sculptures line the streets. Beware the Snow Golems.',
+   color:'#bfdbfe', mapColor:'#93c5fd'},
+
+  // Desert trading post — SE
+  {id:'dunes',    name:'Dunesreach',   cx:130, cy:110, r:9,  biome:'S', ico:'🏜️',
+   desc:'A dusty trading hub. Merchants deal in rare gems and forbidden weapons.',
+   color:'#d97706', mapColor:'#fbbf24'},
+
+  // Deep jungle — SW
+  {id:'jungle',   name:'Verdant Deep', cx:-100,cy:100, r:11, biome:'F', ico:'🌿',
+   desc:'An ancient settlement swallowed by jungle. Strange creatures lurk in the canopy.',
+   color:'#166534', mapColor:'#4ade80'},
+
+  // Volcanic forge town — far east
+  {id:'forge',    name:'Ignis Forge',  cx:200, cy:20,  r:9,  biome:'ST',ico:'🌋',
+   desc:'Built on a volcano. Legendary smiths here forge the most powerful gear.',
+   color:'#7f1d1d', mapColor:'#ef4444'},
+
+  // Pirate port — far south, on coast
+  {id:'port',     name:'Skull Port',   cx:20,  cy:200, r:10, biome:'DK',ico:'⚓',
+   desc:'A lawless pirate port. Find the best weapons and ship upgrades here.',
+   color:'#1c1917', mapColor:'#78716c'},
+];
+
+// Town-specific decorations drawn in the world (emoji, deterministic placement)
+const TOWN_DECOS={
+  village:  ['🌾','🌻','🏠','🪨','🌿','🪵','🌾','🏚'],
+  shadow:   ['🎃','💀','🕯️','🕸️','🦇','⚰️','🎃','👻','🕯️','🌑','🕸️','💀'],
+  frost:    ['⛄','❄️','🏔️','🧊','❄️','⛄','🌨️','🧊','❄️','⛄','🏔️','❄️'],
+  dunes:    ['🌵','🦂','🏺','☀️','🪨','🌵','🌴','🏺','☀️','🦂','🌵'],
+  jungle:   ['🌿','🌴','🦜','🍃','🌺','🌿','🌴','🦎','🌸','🍃','🌿','🌴'],
+  forge:    ['🔥','⚒️','🌋','💥','🔥','⚙️','⚒️','🌋','🔥','💥','⚙️'],
+  port:     ['⚓','🏴‍☠️','🦀','🐚','⚓','🗡️','🏴‍☠️','⛵','⚓','🦀','🐚'],
+};
+const TOWN_NPCS=[
+  // Shadowmere — haunted town
+  {id:'gravedigger', name:'Gravedigger Moe', ico:'⚰️', townId:'shadow', ox:1, oy:-1,
+   dialog:'The Headless Horseman rides at night. 20💰 for a ghost-repelling charm.',
+   btns:['Buy Charm (20💰)','Leave']},
+  {id:'witch',       name:'Witch Hazel',     ico:'🧙‍♀️',townId:'shadow', ox:-2,oy:1,
+   wiz:true, dialog:'I can teach Void Bolt — the dark arts. 30💰.',
+   btns:['Learn Void (30💰)','Leave']},
+  {id:'horseman',    name:'Sleepy Blacksmith',ico:'🗡️',townId:'shadow', ox:2, oy:2,
+   pir:true, dialog:'I forge cursed blades. Spectral Blade costs 18⚙️.',
+   btns:['Spectral Blade (18⚙️)','Leave']},
+
+  // Frostholm — ice town
+  {id:'icekeeper',  name:'Keeper of Ice',   ico:'🧊', townId:'frost',  ox:1, oy:-2,
+   wiz:true, dialog:'The Blizzard spell can freeze entire groups. 35💰.',
+   btns:['Learn Blizzard (35💰)','Leave']},
+  {id:'snowsmith',  name:'Snowsmith Brek',  ico:'⛏️', townId:'frost',  ox:-2,oy:1,
+   pir:true, dialog:'Ice-tempered cannon — heavier shot, more damage. 25⚙️.',
+   btns:['Ice Cannon (25⚙️)','Leave']},
+  {id:'frostmerch', name:'Frost Merchant',  ico:'🧑‍💼',townId:'frost',  ox:2, oy:2,
+   dialog:'Potions are 3💎 here — cold-brewed. Also buy snowberry wine (5💰 = +80HP).',
+   btns:['Brew Potion (3💎)','Snowberry Wine (5💰)','Leave']},
+
+  // Dunesreach — desert town
+  {id:'gemtrader',  name:'Gem Trader Raza',  ico:'💎', townId:'dunes',  ox:-1,oy:-2,
+   dialog:'I buy gems: 3💎 → 15💰. Or sell you mysterious desert relics.',
+   btns:['Sell 3💎 (→15💰)','Buy Relic (12💰)','Leave']},
+  {id:'sandmage',   name:'Sandmage Lyra',   ico:'🌊', townId:'dunes',  ox:2, oy:-1,
+   wiz:true, dialog:'Thunder is amplified in the desert. Learn it for 20💰.',
+   btns:['Learn Thunder (20💰)','Leave']},
+  {id:'desertsmith',name:'Desert Armorer',  ico:'⚔️', townId:'dunes',  ox:-2,oy:2,
+   pir:true, dialog:'Scorpion dagger — quick and deadly. 10⚙️.',
+   btns:['Scorpion Dagger (10⚙️)','Leave']},
+
+  // Verdant Deep — jungle town
+  {id:'shaman',     name:'Jungle Shaman',   ico:'🌿', townId:'jungle', ox:0, oy:-2,
+   wiz:true, dialog:'Nature magic — Thorn Volley hits 3 targets. 25💰.',
+   btns:['Learn Thorn Volley (25💰)','Leave']},
+  {id:'jungletrader',name:'Jungle Trader',  ico:'🦜', townId:'jungle', ox:2, oy:1,
+   dialog:'Exotic goods. Wood sells well — 5🪵 → 8💰. Or buy rare potions.',
+   btns:['Sell 5🪵 (→8💰)','Buy Elixir (15💰)','Leave']},
+  {id:'huntersmith', name:'Hunter Brax',    ico:'🏹', townId:'jungle', ox:-2,oy:1,
+   pir:true, dialog:'Jungle bow — silenced, fast. 12⚙️.',
+   btns:['Jungle Bow (12⚙️)','Leave']},
+
+  // Ignis Forge — volcano town
+  {id:'forgemaster', name:'Forgemaster Vul',ico:'🔥', townId:'forge',  ox:0, oy:-2,
+   dialog:'The greatest forge in the world. Wizard or pirate — I serve all.',
+   btns:['Got it!']},
+  {id:'volcanomage', name:'Pyromancer Sael',ico:'🌋', townId:'forge',  ox:2, oy:0,
+   wiz:true, dialog:'Meteor — the ultimate fire spell. 50💰.',
+   btns:['Learn Meteor (50💰)','Leave']},
+  {id:'volsmith',    name:'Ignis Armorer',  ico:'⚒️', townId:'forge',  ox:-2,oy:0,
+   pir:true, dialog:'Flameshot cannon — burns on impact. 30⚙️. Or lava blade 20⚙️.',
+   btns:['Flameshot (30⚙️)','Lava Blade (20⚙️)','Leave']},
+
+  // Skull Port — pirate town
+  {id:'portmerch',  name:'Black Market',    ico:'🏴‍☠️',townId:'port',   ox:1, oy:-2,
+   pir:true, dialog:'Contraband! Grapeshot spread cannon 25⚙️. Poisoned blade 15⚙️.',
+   btns:['Grapeshot (25⚙️)','Poison Blade (15⚙️)','Leave']},
+  {id:'admiral',    name:'Admiral Skav',    ico:'⚓', townId:'port',   ox:-2,oy:0,
+   pir:true, dialog:'I\'ll upgrade your ship. Reinforced hull 30💰. Extra sail 20💰.',
+   btns:['Reinforced Hull (30💰)','Extra Sail (20💰)','Leave']},
+  {id:'portmage',   name:'Sea Witch',       ico:'🔮', townId:'port',   ox:2, oy:2,
+   wiz:true, dialog:'Maelstrom — ocean vortex spell. Only usable near water. 40💰.',
+   btns:['Learn Maelstrom (40💰)','Leave']},
+];
+
+// Town-specific monsters (spawn preferentially near each town)
+const TOWN_MONS={
+  shadow:[
+    {id:'ghost2',  name:'Wailing Ghost',  ico:'👻',hp:45, atk:14,xp:30,gold:8, wood:0, gem:3,metal:0,spd:1.2},
+    {id:'pumpkin', name:'Pumpkin Fiend',  ico:'🎃',hp:55, atk:16,xp:35,gold:10,wood:0, gem:2,metal:1,spd:.9},
+    {id:'skeleton2',name:'Grave Stalker', ico:'💀',hp:65, atk:18,xp:40,gold:12,wood:0, gem:0,metal:3,spd:.85},
+    {id:'banshee', name:'Banshee',        ico:'👻',hp:50, atk:22,xp:45,gold:14,wood:0, gem:4,metal:0,spd:1.3,
+     ranged:true,spell:'💀',sDmg:28,sCol:'#7c3aed',sSpd:8},
+    {id:'horseman',name:'Headless Rider', ico:'🐴',hp:120,atk:35,xp:90,gold:30,wood:0, gem:6,metal:5,spd:1.4},
+  ],
+  frost:[
+    {id:'snowman', name:'Snow Golem',     ico:'☃️',hp:70, atk:18,xp:38,gold:10,wood:0, gem:2,metal:3,spd:.7},
+    {id:'yeti',    name:'Yeti',           ico:'🏔️',hp:90, atk:24,xp:55,gold:16,wood:0, gem:3,metal:4,spd:.75},
+    {id:'icesprite',name:'Ice Sprite',   ico:'❄️',hp:35, atk:14,xp:25,gold:7, wood:0, gem:4,metal:0,spd:1.4,
+     ranged:true,spell:'❄️',sDmg:20,sCol:'#93c5fd',sSpd:9},
+    {id:'frostdrake',name:'Frost Drake', ico:'🐉',hp:80, atk:28,xp:60,gold:18,wood:0, gem:5,metal:3,spd:.85,
+     ranged:true,spell:'❄️',sDmg:32,sCol:'#bfdbfe',sSpd:7},
+  ],
+  dunes:[
+    {id:'scorpion2',name:'Giant Scorpion',ico:'🦂',hp:60, atk:18,xp:32,gold:9, wood:0, gem:4,metal:2,spd:1.1},
+    {id:'mummy',   name:'Desert Mummy',  ico:'🧟',hp:75, atk:20,xp:42,gold:12,wood:0, gem:3,metal:1,spd:.7},
+    {id:'sandworm',name:'Sand Wyrm',     ico:'🐛',hp:100,atk:28,xp:65,gold:20,wood:0, gem:5,metal:4,spd:.6},
+    {id:'djinn',   name:'Sand Djinn',    ico:'🌪️',hp:55, atk:26,xp:50,gold:15,wood:0, gem:6,metal:2,spd:1.0,
+     ranged:true,spell:'🌪️',sDmg:30,sCol:'#fbbf24',sSpd:8},
+  ],
+  jungle:[
+    {id:'viper',   name:'Viper',         ico:'🐍',hp:40, atk:15,xp:28,gold:7, wood:5, gem:2,metal:0,spd:1.3},
+    {id:'gorilla', name:'Silverback',    ico:'🦍',hp:110,atk:30,xp:70,gold:22,wood:15,gem:2,metal:0,spd:.8},
+    {id:'piranha', name:'Thorn Sprite',  ico:'🌺',hp:30, atk:12,xp:22,gold:6, wood:8, gem:3,metal:0,spd:1.5,
+     ranged:true,spell:'🌿',sDmg:18,sCol:'#4ade80',sSpd:9},
+    {id:'raptor',  name:'Jungle Raptor', ico:'🦖',hp:75, atk:25,xp:55,gold:16,wood:10,gem:1,metal:0,spd:1.2},
+  ],
+  forge:[
+    {id:'lavaslime',name:'Lava Slime',   ico:'🟠',hp:50, atk:18,xp:35,gold:8, wood:0, gem:1,metal:5,spd:.9},
+    {id:'firegolem',name:'Fire Golem',   ico:'🗿',hp:120,atk:32,xp:80,gold:24,wood:0, gem:3,metal:8,spd:.55},
+    {id:'phoenix', name:'Magma Wraith',  ico:'🔥',hp:65, atk:24,xp:50,gold:16,wood:0, gem:4,metal:6,spd:1.0,
+     ranged:true,spell:'🔥',sDmg:35,sCol:'#f97316',sSpd:9},
+  ],
+  port:[
+    {id:'pirate2', name:'Sea Dog',       ico:'🏴‍☠️',hp:60,atk:20,xp:38,gold:18,wood:5, gem:0,metal:3,spd:.95},
+    {id:'siren',   name:'Siren',         ico:'🧜',hp:50, atk:16,xp:32,gold:14,wood:0, gem:5,metal:1,spd:1.1,
+     ranged:true,spell:'💫',sDmg:22,sCol:'#a78bfa',sSpd:8},
+    {id:'seamonster',name:'Sea Serpent', ico:'🐉',hp:140,atk:38,xp:100,gold:35,wood:0,gem:8,metal:6,spd:.7},
+  ],
+};
+
+// Wizard arcane forge recipes (metal → powerful items)
+const ARCANE_FORGE=[
+  {id:'runestone',  name:'Runestone',    ico:'🔮',cost:6,  desc:'+20 spell dmg permanently', type:'upgrade'},
+  {id:'iron_staff', name:'Iron Staff',   ico:'🪄',cost:12, desc:'Staff: +15 dmg, ranged melee',type:'weapon'},
+  {id:'golem_core', name:'Golem Core',   ico:'🤖',cost:20, desc:'Summon an Iron Golem ally', type:'summon'},
+  {id:'mana_shield',name:'Mana Shield',  ico:'🛡️',cost:15, desc:'+50 max HP, magic barrier',  type:'upgrade'},
+  {id:'rune_cannon',name:'Rune Cannon',  ico:'💥',cost:25, desc:'Wizard fires arcane bolts',   type:'weapon'},
+];
+
+// Pirate buildings (gold → permanent structures)
+const PIRATE_BUILDS=[
+  {id:'tavern',    name:'Tavern',       ico:'🍺',cost:30, desc:'Recruit crew — passive +2💰/kill',built:false},
+  {id:'fort',      name:'Sea Fort',     ico:'🏰',cost:60, desc:'+80 max HP, cannon emplacement', built:false},
+  {id:'lighthouse',name:'Lighthouse',   ico:'🏮',cost:25, desc:'Reveals full ocean map forever',  built:false},
+  {id:'drydock',   name:'Dry Dock',     ico:'⚓',cost:50, desc:'Builds ships faster — Brigantine unlocked',built:false},
+];
+
+let pirateBuildState={tavern:false,fort:false,lighthouse:false,drydock:false};
+let wizardUpgrades={bonusDmg:0,manaShield:false,golem:null};
+
 const NPCS=[
-  {id:'elder',   name:'Village Elder',ico:'👴',  x:13,y:14,dialog:"Welcome! The village is safe. Head east when you're ready — the world is vast and infinite.",btns:['Got it!']},
-  {id:'merchant',name:'The Merchant', ico:'🧑‍💼', x:11,y:15,dialog:'10💰 for a mystery loot box!',btns:['Buy box (10💰)','Leave']},
-  {id:'sage1',   name:'Sage Thalia',  ico:'🧙‍♀️',x:14,y:13,wiz:true,dialog:'Ice Shard slows enemies. 5💰.',btns:['Learn Ice Shard (5💰)','Leave']},
-  {id:'sage2',   name:'Sage Orren',   ico:'🧝',  x:12,y:13,wiz:true,dialog:'Lightning — fast 4-tile strike. 10💰.',btns:['Learn Lightning (10💰)','Leave']},
-  {id:'sage3',   name:'Sage Mira',    ico:'🧑‍🔬',x:26,y:8, wiz:true,dialog:'Blink teleports you 5 tiles. 15💰.',btns:['Learn Blink (15💰)','Leave']},
-  {id:'sage4',   name:'Sage Borek',   ico:'🧓',  x:20,y:22,wiz:true,dialog:'Thunder devastates groups. 25💰.',btns:['Learn Thunder (25💰)','Leave']},
-  {id:'robot',   name:'OMNIBUS-7',    ico:'🤖',  x:44,y:30,wiz:true,dialog:'ALL SPELLS. COST: 80💰. COMPLY?',btns:['COMPLY (80💰)','DISENGAGE']},
-  {id:'sw',      name:'Shipwright',   ico:'⚒️',  x:11,y:16,pir:true,dialog:'30🪵 for a Sloop — sail the infinite ocean!',btns:['Build Sloop (30🪵)','Leave']},
-  {id:'ws',      name:'Weaponsmith',  ico:'⚔️',  x:13,y:15,pir:true,dialog:'15💰 + 5💎 — +12 attack power.',btns:['Upgrade (15💰 5💎)','Leave']},
-  {id:'nav',     name:'Navigator Ren',ico:'🧭',  x:12,y:16,pir:true,dialog:'5💰 reveals the ocean map.',btns:['Reveal map (5💰)','Leave']},
+  // Village NPCs (Emberwick)
+  {id:'elder',   name:'Village Elder',  ico:'👴', x:13,y:14,dialog:"Welcome to Emberwick! Six towns await beyond: Shadowmere (NW), Frostholm (NE), Dunesreach (SE), Verdant Deep (SW), Ignis Forge (E), Skull Port (S). Each has its own dangers and rewards.",btns:['Got it!']},
+  {id:'merchant',name:'The Merchant',   ico:'🧑‍💼',x:11,y:15,dialog:'10💰 mystery loot · 5💰 HP gem · Use potions here.',btns:['Buy box (10💰)','Buy HP Gem (5💰)','Use Potion','Leave']},
+  // Wizard sages (village)
+  {id:'sage1',   name:'Sage Thalia',    ico:'🧙‍♀️',x:14,y:13,wiz:true,dialog:'Ice Shard slows enemies. 5💰.',btns:['Learn Ice Shard (5💰)','Leave']},
+  {id:'sage2',   name:'Sage Orren',     ico:'🧝', x:12,y:13,wiz:true,dialog:'Lightning — fast 4-tile strike. 10💰.',btns:['Learn Lightning (10💰)','Leave']},
+  {id:'sage3',   name:'Sage Mira',      ico:'🧑‍🔬',x:26,y:8, wiz:true,dialog:'Blink teleports you 5 tiles. 15💰.',btns:['Learn Blink (15💰)','Leave']},
+  {id:'sage4',   name:'Sage Borek',     ico:'🧓', x:20,y:22,wiz:true,dialog:'Thunder devastates groups. 25💰.',btns:['Learn Thunder (25💰)','Leave']},
+  // Wizard Arcane Forge (village)
+  {id:'arcaneforge',name:'Arcane Forge',ico:'⚗️', x:15,y:14,wiz:true,dialog:'I transmute metal into arcane power. Choose your craft.',
+   btns:['Runestone (6⚙️)','Iron Staff (12⚙️)','Golem Core (20⚙️)','Mana Shield (15⚙️)','Rune Cannon (25⚙️)','Leave']},
+  // Pirate NPCs (village)
+  {id:'sw',      name:'Shipwright',     ico:'⚒️', x:11,y:16,pir:true,dialog:'30🪵 for a Sloop. With Dry Dock built, Brigantine available!',btns:['Build Sloop (30🪵)','Build Brigantine (60🪵)','Leave']},
+  {id:'ws',      name:'Weaponsmith',    ico:'⚔️', x:13,y:15,pir:true,dialog:'Forge weapons from metal. Brew gem potions. Build structures with gold.',btns:['Musket (8⚙️)','Blunderbuss (12⚙️)','Iron Sword (6⚙️)','Cannon (20⚙️)','Brew Potion (4💎)','Hull Plate (15⚙️)','Speed Keel (10⚙️)','Leave']},
+  {id:'builder', name:'Port Builder',   ico:'🏗️', x:12,y:16,pir:true,dialog:'Build permanent structures with gold. Each building grants lasting bonuses.',
+   btns:['Tavern (30💰)','Fort (60💰)','Lighthouse (25💰)','Dry Dock (50💰)','Leave']},
+  {id:'nav',     name:'Navigator Ren',  ico:'🧭', x:12,y:17,pir:true,dialog:'5💰 reveals the ocean map.',btns:['Reveal map (5💰)','Leave']},
+  // Riddler NPCs
+  {id:'riddler1',name:'The Sphinx',     ico:'🦁', x:35,y:12,riddle:true,dialog:'I pose a riddle. Answer correctly for XP. Wrong answer costs HP!',btns:['Accept challenge','Decline']},
+  {id:'riddler2',name:'Ancient Oracle', ico:'🔮', x:18,y:30,riddle:true,dialog:'Wisdom is power. Dare you test yours?',btns:['Accept challenge','Decline']},
+  {id:'riddler3',name:'Wise Hermit',    ico:'🧙', x:42,y:18,riddle:true,dialog:'I have lived long enough to forget more than you know.',btns:['Accept challenge','Decline']},
+  {id:'riddler4',name:'Puzzle Goblin',  ico:'👺', x:28,y:35,riddle:true,dialog:'Goblins love riddles! Fail and bleed!',btns:['Accept challenge','Decline']},
+  // OMNIBUS-7
+  {id:'robot',   name:'OMNIBUS-7',      ico:'🤖', x:220,y:180,wiz:true,dialog:'DEEP DUNGEON UNIT ONLINE. ALL OFFENSIVE SPELLS. NO HEALING. 80💰. COMPLY?',btns:['COMPLY (80💰)','DISENGAGE']},
 ];
 
 // ═══════════════════════════════════════
@@ -712,21 +1019,40 @@ const NPCS=[
 let G=null, mons=[], npcs=[], projs=[], parts=[];
 let keys={}, lastT=0, animId=null, atkCD=0, mTmr=0, wFrame=0, wTmr=0;
 let paneId='inv', rTick=0;
-// Aim direction (world angle, radians) — updated by right joystick or mouse
 let aimAngle=0, aimActive=false;
-// Track visited chunks for monster spawning
 const spawnedChunks=new Set();
+const visitedTowns=new Set();
+
+// Ground loot drops
+let lootDrops=[];
+// Boss arenas (pre-marked tiles around mega spawns)
+let bossArenas=[];
+// Day/night — full cycle every 4 minutes real time
+let dayTime=0; // 0..1, 0=noon, 0.5=midnight
+const DAY_CYCLE=240; // seconds per full cycle
+// Session stats
+let stats={monstersKilled:0,megasKilled:0,distTraveled:0,goldEarned:0,riddlesSolved:0,spellsCast:0,shotsFired:0,damageDealt:0,damageTaken:0,deathCount:0,startTime:Date.now()};
+let lastPos={x:12.5,y:14.5};
+
+// World scale multiplier — all exploration coordinates are 10x larger
+const WSCALE=10;
 
 function fresh(cls,leg={lives:0,int:0,str:0}){
-  return{cls,hp:100,maxHp:100+leg.int*2,level:1,xp:0,gold:5,wood:0,gem:0,
+  const baseHp=250+leg.int*2;
+  return{cls,hp:baseHp,maxHp:baseHp,level:1,xp:0,gold:10,wood:0,gem:0,metal:0,
+    hpPots:3,
     spells:cls==='wizard'?['fireball']:[],
+    pirWep:'cutlass',
+    weapons:cls==='pirate'?['cutlass','pistol']:[],
     inv:cls==='wizard'?[{id:'staff',name:'Staff',ico:'🪄',qty:1}]:[{id:'cutlass',name:'Cutlass',ico:'⚔️',qty:1},{id:'pistol',name:'Pistol',ico:'🔫',qty:1}],
     hb:cls==='wizard'
       ?[{ico:'🪄',lbl:'Staff'},{ico:'🔥',lbl:'Fireball',spell:'fireball'},{ico:'',lbl:''},{ico:'',lbl:''},{ico:'',lbl:''},{ico:'',lbl:''}]
-      :[{ico:'⚔️',lbl:'Cutlass'},{ico:'🔫',lbl:'Pistol'},{ico:'',lbl:''},{ico:'',lbl:''},{ico:'',lbl:''},{ico:'',lbl:''}],
+      :[{ico:'⚔️',lbl:'Cutlass',wep:'cutlass'},{ico:'🔫',lbl:'Pistol',wep:'pistol'},{ico:'',lbl:''},{ico:'',lbl:''},{ico:'',lbl:''},{ico:'',lbl:''}],
     slot:0,pos:{x:12.5,y:14.5},dir:'down',spd:5,
     shipBuilt:false,wepUp:false,leg,oceanRev:false,
-    outTimer:0,awake:false};
+    outTimer:0,awake:false,riddlesSolved:0,
+    // Extended crafting
+    potions:0,shipUpgrades:0};
 }
 
 // ═══════════════════════════════════════
@@ -749,60 +1075,112 @@ function maybeSpawnChunk(px,py){
 }
 
 function spawnChunkMonsters(ox,oy,size){
-  // Determine zone to pick monster types
   const cx=ox+size/2,cy=oy+size/2;
   const distFromHome=Math.sqrt((cx-13)**2+(cy-14.5)**2);
-  if(distFromHome<SAFE_R+2)return; // no spawns near village
-  // Pick monster set based on zone
+  if(distFromHome<SAFE_R+2)return;
+
+  // Don't spawn inside town clearings
+  for(const town of TOWNS){
+    const td=Math.sqrt((cx-town.cx)**2+(cy-town.cy)**2);
+    if(td<town.r+3)return;
+  }
+
+  // Check if near a named town — use that town's monster pool
+  let nearTown=null,nearDist=999;
+  for(const town of TOWNS){
+    if(town.id==='village')continue;
+    const td=Math.sqrt((cx-town.cx)**2+(cy-town.cy)**2);
+    if(td<30&&td<nearDist){nearTown=town;nearDist=td;}
+  }
+
   const t=getTileAt(Math.floor(cx),Math.floor(cy));
   let pool,density;
-  if(t===TR.D||t===TR.ST||distFromHome>40){pool=[7,8,9,6];density=3;}
-  else if(t===TR.S){pool=[5,6,4,2];density=3;}
-  else if(t===TR.F){pool=[0,1,2,3,4];density=3;}
-  else{pool=[0,1,2,3,4,5];density=2;}
-  // Scale difficulty by distance
-  const tier=Math.floor(distFromHome/15);
-  for(let i=0;i<density;i++){
-    const r=sr(ox*173+oy*211+i*97);
-    const mx=ox+r*size, my=oy+sr(ox*311+oy*113+i*53)*size;
-    if(!isFinite(mx)||!isFinite(my))continue;
-    const t2=getTileAt(Math.floor(mx),Math.floor(my));
-    if(TBLOCK.has(t2))continue;
-    const mi=pool[Math.floor(sr(ox*79+oy*131+i*61)*pool.length)];
-    const base={...RMON[mi]};
-    // Scale up by tier
-    const scale=1+tier*.3;
-    const m={...base,uid:`c${ox}_${oy}_${i}`,x:mx,y:my,hp:Math.floor(base.hp*scale),maxHp:Math.floor(base.hp*scale),atk:Math.floor(base.atk*scale),xp:Math.floor(base.xp*(1+tier*.5)),gold:Math.floor(base.gold*(1+tier*.3)),
-      alive:true,aggro:false,faction:null,mt:Math.random()*2,hx:mx,hy:my,st:0};
-    mons.push(m);
+  const tier=Math.floor(distFromHome/80);
+
+  if(nearTown&&TOWN_MONS[nearTown.id]){
+    // Town-specific monsters
+    const townPool=TOWN_MONS[nearTown.id];
+    density=3;
+    for(let i=0;i<density;i++){
+      const r=sr(ox*173+oy*211+i*97);
+      const mx=ox+r*size, my=oy+sr(ox*311+oy*113+i*53)*size;
+      if(!isFinite(mx)||!isFinite(my))continue;
+      const t2=getTileAt(Math.floor(mx),Math.floor(my));
+      if(TBLOCK.has(t2))continue;
+      const base={...townPool[Math.floor(sr(ox*79+oy*131+i*61)*townPool.length)]};
+      const scale=1+tier*.25;
+      mons.push({...base,uid:`c${ox}_${oy}_${i}`,x:mx,y:my,
+        hp:Math.floor(base.hp*scale),maxHp:Math.floor(base.hp*scale),
+        atk:Math.floor(base.atk*scale),xp:Math.floor(base.xp*(1+tier*.4)),
+        gold:Math.floor(base.gold*(1+tier*.25)),metal:(base.metal||0),
+        alive:true,aggro:false,faction:null,mt:Math.random()*2,hx:mx,hy:my,st:0,sst:1+Math.random()*2});
+    }
+  } else {
+    // Generic world monsters
+    if(t===TR.D||t===TR.ST||distFromHome>400){pool=[7,8,9,6,10,11,12];density=3;}
+    else if(t===TR.S){pool=[5,6,4,2,10];density=3;}
+    else if(t===TR.F){pool=[0,1,2,3,4,10];density=3;}
+    else{pool=[0,1,2,3,4,5,10,11];density=2;}
+    for(let i=0;i<density;i++){
+      const r=sr(ox*173+oy*211+i*97);
+      const mx=ox+r*size, my=oy+sr(ox*311+oy*113+i*53)*size;
+      if(!isFinite(mx)||!isFinite(my))continue;
+      const t2=getTileAt(Math.floor(mx),Math.floor(my));
+      if(TBLOCK.has(t2))continue;
+      const mi=pool[Math.floor(sr(ox*79+oy*131+i*61)*pool.length)];
+      if(mi>=RMON.length)continue;
+      const base={...RMON[mi]};
+      const scale=1+tier*.3;
+      mons.push({...base,uid:`c${ox}_${oy}_${i}`,x:mx,y:my,
+        hp:Math.floor(base.hp*scale),maxHp:Math.floor(base.hp*scale),
+        atk:Math.floor(base.atk*scale),xp:Math.floor(base.xp*(1+tier*.5)),
+        gold:Math.floor(base.gold*(1+tier*.3)),metal:(base.metal||0),
+        alive:true,aggro:false,faction:null,mt:Math.random()*2,hx:mx,hy:my,st:0,sst:1+Math.random()*2});
+    }
   }
-  // Rare mega spawn (1 per far chunk, low chance)
-  if(distFromHome>25&&sr(ox*997+oy*761)<0.06){
+
+  // Rare mega spawn
+  if(distFromHome>120&&sr(ox*997+oy*761)<0.06){
     const mi=Math.floor(sr(ox*239+oy*173)*MEGA.length);
     const base={...MEGA[mi]};
     const mx=ox+size*.5,my=oy+size*.5;
     const t2=getTileAt(Math.floor(mx),Math.floor(my));
-    if(!TBLOCK.has(t2))
-      mons.push({...base,uid:`mega_${ox}_${oy}`,x:mx,y:my,hp:base.hp,maxHp:base.hp,alive:true,aggro:false,faction:null,mt:Math.random()*2,hx:mx,hy:my,st:0});
+    if(!TBLOCK.has(t2)){
+      mons.push({...base,uid:`mega_${ox}_${oy}`,x:mx,y:my,hp:base.hp,maxHp:base.hp,alive:true,aggro:false,faction:null,mt:Math.random()*2,hx:mx,hy:my,st:0,sst:3});
+      bossArenas.push({x:mx,y:my,r:6,ico:base.ico,name:base.name});
+    }
   }
-  // Faction fighters in mid-range
-  if(distFromHome>12&&distFromHome<50&&sr(ox*503+oy*401)<0.15){
+  // Faction fighters
+  if(distFromHome>80&&sr(ox*503+oy*401)<0.15){
     const fi=Math.floor(sr(ox*317+oy*199)*FF.length);
     const base={...FF[fi]};
     const mx=ox+size*.4,my=oy+size*.4;
     const t2=getTileAt(Math.floor(mx),Math.floor(my));
     if(!TBLOCK.has(t2))
-      mons.push({...base,uid:`ff_${ox}_${oy}`,x:mx,y:my,hp:base.hp,maxHp:base.hp,alive:true,aggro:false,mega:false,mt:Math.random()*2,hx:mx,hy:my,st:1+Math.random()*2});
+      mons.push({...base,uid:`ff_${ox}_${oy}`,x:mx,y:my,hp:base.hp,maxHp:base.hp,alive:true,aggro:false,mega:false,mt:Math.random()*2,hx:mx,hy:my,st:1+Math.random()*2,sst:2+Math.random()});
+  }
+  // HP gems
+  if(sr(ox*443+oy*557)<0.12){
+    const gx=ox+sr(ox*211+oy*317)*size;
+    const gy=oy+sr(ox*317+oy*211)*size;
+    const t3=getTileAt(Math.floor(gx),Math.floor(gy));
+    if(!TBLOCK.has(t3))hpGems.push({x:gx,y:gy,hp:50+Math.floor(tier*15),alive:true});
   }
 }
 
 function initSpawns(){
-  mons=[];
-  // Seed the starting chunks
+  mons=[];hpGems=[];lootDrops=[];bossArenas=[];
   spawnedChunks.clear();
-  // Place NPCs
-  npcs=NPCS.map(n=>({...n}));
-  // Trigger initial chunk spawning
+  // Base NPCs + town NPCs positioned at their town center offsets
+  const allNpcs=[...NPCS];
+  TOWN_NPCS.forEach(tn=>{
+    const town=TOWNS.find(t=>t.id===tn.townId);
+    if(!town)return;
+    allNpcs.push({...tn,x:Math.round(town.cx+tn.ox),y:Math.round(town.cy+tn.oy)});
+  });
+  npcs=allNpcs.map(n=>({...n}));
+  pirateBuildState={tavern:false,fort:false,lighthouse:false,drydock:false};
+  wizardUpgrades={bonusDmg:0,manaShield:false,golem:null};
   maybeSpawnChunk(12.5,14.5);
 }
 
@@ -829,19 +1207,34 @@ function tick(dt){
   if(atkCD>0)atkCD=Math.max(0,atkCD-dt);
   wTmr+=dt;if(wTmr>.4){wTmr=0;wFrame=(wFrame+1)%3;}
 
+  // Day/night cycle
+  dayTime=(dayTime+dt/DAY_CYCLE)%1;
+  tickDayNight();
+
+  // Boost timers
+  if(boostActive){
+    boostTimer=Math.max(0,boostTimer-dt);
+    if(boostTimer<=0){boostActive=false;boostCooldown=BOOST_COOLDOWN;not('💨 Boost over!');}
+  } else if(boostCooldown>0){
+    boostCooldown=Math.max(0,boostCooldown-dt);
+  }
+
   // Movement
   let dx=(keys['ArrowLeft']||keys['a']||keys['A'])?-1:(keys['ArrowRight']||keys['d']||keys['D'])?1:0;
   let dy=(keys['ArrowUp']  ||keys['w']||keys['W'])?-1:(keys['ArrowDown'] ||keys['s']||keys['S'])?1:0;
   if(joy.active){dx=joy.dx;dy=joy.dy;}
   if(dx||dy){
     const mg=Math.sqrt(dx*dx+dy*dy);dx/=mg;dy/=mg;
-    const sp=G.spd*dt;
+    const nightPen=isNight()?0.8:1;
+    const boostMult=boostActive?2:1;
+    const sp=G.spd*dt*nightPen*boostMult;
     const nx=G.pos.x+dx*sp, ny=G.pos.y+dy*sp;
-    if(wk(nx,ny)){G.pos.x=nx;G.pos.y=ny;}          // full move
-    else if(wk(nx,G.pos.y)){G.pos.x=nx;}            // slide on Y wall
-    else if(wk(G.pos.x,ny)){G.pos.y=ny;}            // slide on X wall
+    if(wk(nx,ny)){G.pos.x=nx;G.pos.y=ny;}
+    else if(wk(nx,G.pos.y)){G.pos.x=nx;}
+    else if(wk(G.pos.x,ny)){G.pos.y=ny;}
     if(Math.abs(dx)>Math.abs(dy)){if(dx<0)G.dir='left';else G.dir='right';}
     else{if(dy<0)G.dir='up';else G.dir='down';}
+    stats.distTraveled+=sp;
   }
 
   // Aim joystick auto-fire
@@ -855,16 +1248,34 @@ function tick(dt){
     }
   }
 
+  // HP gem pickup (walk-over)
+  hpGems=hpGems.filter(g=>{
+    if(!g.alive)return false;
+    if(ds(G.pos,g)<1.2){
+      G.hp=Math.min(G.maxHp,G.hp+g.hp);
+      not(`💚 +${g.hp} HP!`);lg('info',`💚 HP Gem! +${g.hp} HP`);sfxSpell('heal');
+      return false;
+    }
+    return true;
+  });
+  hpGems=hpGems.filter(g=>ds(G.pos,g)<400);
+
+  // Ground loot pickup (walk over or press E to collect)
+  lootDrops=lootDrops.filter(l=>{
+    if(ds(G.pos,l)<1.0){
+      applyLoot(l);
+      fx(l.x,l.y,l.col||'#fbbf24',6);sfxLoot();
+      return false;
+    }
+    return ds(G.pos,l)<300;
+  });
+
   // Safe zone / grace
   const dist2=dv(G.pos.x,G.pos.y);
-  const shEl=document.getElementById('sh');
-  if(dist2<SAFE_R){shEl.style.opacity='1';}
-  else{shEl.style.opacity='0';if(!G.awake){G.outTimer+=dt;if(G.outTimer>=GRACE){G.awake=true;lg('combat','⚠ The wilderness stirs… monsters have noticed you!');}}}
-
-  // Spawn new chunks as player explores
+  if(dist2>=SAFE_R&&!G.awake){G.outTimer+=dt;if(G.outTimer>=GRACE){G.awake=true;lg('combat','⚠ The wilderness stirs… monsters have noticed you!');}}
   maybeSpawnChunk(G.pos.x,G.pos.y);
-  // Cull monsters too far away (>80 tiles)
-  mons=mons.filter(m=>!m.alive||ds(m,G.pos)<80);
+  // Cull — scaled for 10x world
+  mons=mons.filter(m=>!m.alive||ds(m,G.pos)<400);
 
   mTmr+=dt;if(mTmr>.35){mTmr=0;tickMons();}
 
@@ -872,10 +1283,17 @@ function tick(dt){
   projs=projs.filter(p=>{
     p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(p.life<=0)return false;
     if(!p.src){
-      for(const m of mons){if(!m.alive)continue;if(Math.abs(m.x-p.x)<.7&&Math.abs(m.y-p.y)<.7){hitM(m,p.dmg);fx(p.x,p.y,p.col,m.mega?14:8);sfxHit();return false;}}
+      for(const m of mons){if(!m.alive)continue;const hr=(p.psize||1)*.7;if(Math.abs(m.x-p.x)<hr&&Math.abs(m.y-p.y)<hr){hitM(m,p.dmg);fx(p.x,p.y,p.col,m.mega?14:8);sfxHit();return false;}}
+    } else if(p.src==='monster'){
+      if(Math.abs(G.pos.x-p.x)<0.6&&Math.abs(G.pos.y-p.y)<0.6){
+        let dmg=isNight()?Math.floor(p.dmg*1.25):p.dmg;
+        if(wizardUpgrades&&wizardUpgrades.manaShield)dmg=Math.floor(dmg*0.8);
+        G.hp=Math.max(0,G.hp-dmg);stats.damageTaken+=dmg;
+        flash('df',120);lg('combat',`${p.ico} hits you for ${dmg}${isNight()?'🌙':''}`);fx(p.x,p.y,p.col,6);sfxHit();if(G.hp<=0)die();return false;
+      }
     } else {
       if(p.src!==G.cls){if(Math.abs(G.pos.x-p.x)<.6&&Math.abs(G.pos.y-p.y)<.6){
-        G.hp=Math.max(0,G.hp-p.dmg);flash('df',120);lg('combat',`${p.ico} Spell hits you for ${p.dmg}!`);fx(p.x,p.y,p.col,6);sfxHit();if(G.hp<=0)die();return false;}}
+        G.hp=Math.max(0,G.hp-p.dmg);stats.damageTaken+=p.dmg;flash('df',120);lg('combat',`${p.ico} hits you for ${p.dmg}!`);fx(p.x,p.y,p.col,6);sfxHit();if(G.hp<=0)die();return false;}}
       for(const m of mons){if(!m.alive||!m.faction||m.faction===p.src)continue;if(Math.abs(m.x-p.x)<.65&&Math.abs(m.y-p.y)<.65){
         m.hp-=p.dmg;fx(p.x,p.y,p.col,5);if(m.hp<=0){m.alive=false;lg('combat',`Faction spell defeats ${m.ico} ${m.name}!`);}return false;}}
     }
@@ -883,8 +1301,10 @@ function tick(dt){
   });
   parts=parts.filter(p=>{p.life-=dt;return p.life>0;});
   updAL();updUI();
-  if(++rTick%6===0)rSide();
-  drawMini(document.getElementById('mc'),182,152);
+  // Trim tile cache by 1 entry per frame — amortized, never spikes, never mid-wk()
+  if(tileCache.size>60000)tileCache.delete(tileCache.keys().next().value);
+  if(++rTick%30===0)rSide();
+  if(rTick%10===0)drawMini(document.getElementById('mc'),182,152);
 }
 
 // ═══════════════════════════════════════
@@ -893,51 +1313,136 @@ function tick(dt){
 function canAg(){return G.awake&&dv(G.pos.x,G.pos.y)>=SAFE_R;}
 function tickMons(){const px=G.pos.x,py=G.pos.y;for(const m of mons){if(!m.alive)continue;m.faction?tickFF(m,px,py):tickRM(m,px,py);}}
 function tickRM(m,px,py){
-  const d=ds(m,{x:px,y:py}),ar=m.mega?8:5;
-  if(canAg()&&d<ar)m.aggro=true;if(d>12)m.aggro=false;
+  // Night: bigger aggro range, faster
+  const nightMult=isNight()?1.5:1;
+  const d=ds(m,{x:px,y:py});
+  const ar=(m.mega?12:8)*nightMult;
+  if(canAg()&&d<ar)m.aggro=true;if(d>ar*2)m.aggro=false;
   if(m.aggro){
-    const a=Math.atan2(py-m.y,px-m.x),sp=m.spd*(m.mega?.24:.29);
-    const nx=m.x+Math.cos(a)*sp,ny=m.y+Math.sin(a)*sp;
-    if(wk(nx,m.y))m.x=nx;if(wk(m.x,ny))m.y=ny;
-    if(d<(m.mega?1.6:1.2)){
-      const dmg=m.atk+Math.floor(Math.random()*(m.mega?10:5))-(m.mega?0:2);
-      G.hp=Math.max(0,G.hp-dmg);
+    const a=Math.atan2(py-m.y,px-m.x);
+    const spMult=m.mega?.24:.29;
+    const sp=m.spd*spMult*nightMult;
+    const stopDist=m.ranged?4:(m.mega?2:1.5);
+    if(d>stopDist){const nx=m.x+Math.cos(a)*sp,ny=m.y+Math.sin(a)*sp;if(wk(nx,m.y))m.x=nx;if(wk(m.x,ny))m.y=ny;}
+    if(m.ranged){
+      m.sst=(m.sst||2)-0.35;
+      if(m.sst<=0&&d<(m.mega?12:8)){
+        m.sst=(2+Math.random())/nightMult;
+        const spd=m.sSpd||7;
+        projs.push({x:m.x,y:m.y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,
+          dmg:Math.floor((m.sDmg||m.atk)*(isNight()?1.25:1)),
+          col:m.sCol||'#f97316',life:1.4,ico:m.spell||'🔥',src:'monster',psize:1});
+        lg('combat',`${m.ico} ${m.name} shoots ${m.spell||'🔥'}!`);
+      }
+    }
+    if(!m.ranged&&d<(m.mega?2:1.5)){
+      const dmg=Math.floor((m.atk+Math.floor(Math.random()*(m.mega?10:5))-(m.mega?0:2))*(isNight()?1.25:1));
+      G.hp=Math.max(0,G.hp-dmg);stats.damageTaken+=dmg;
       if(m.mega){flash('mf',200);lg('mega',`⭐ ${m.name} CRUSHES you for ${dmg}!!!`);sfxMegaHit();}
-      else{flash('df',120);lg('combat',`${m.ico} ${m.name} hits you for ${dmg}!`);sfxHit();}
+      else{flash('df',120);lg('combat',`${m.ico} ${m.name} hits you for ${dmg}${isNight()?'🌙':''}`);sfxHit();}
       if(G.hp<=0){die();return;}
     }
   } else {
     m.mt-=.35;if(m.mt<=0){m.mt=(m.mega?2.5:1.5)+Math.random();
-      const a=Math.random()*Math.PI*2,wr=m.mega?2:1.5;
+      const a=Math.random()*Math.PI*2,wr=m.mega?3:2;
       const nx=m.hx+Math.cos(a)*wr,ny=m.hy+Math.sin(a)*wr;if(wk(nx,ny)){m.x=nx;m.y=ny;}}
   }
 }
 function tickFF(m,px,py){
+  const nightMult=isNight()?1.4:1;
   let tgt=null,td=999;
-  if(canAg()&&m.faction!==G.cls){const dp=ds(m,{x:px,y:py});if(dp<8&&dp<td){tgt={x:px,y:py,ip:true};td=dp;}}
-  for(const o of mons){if(!o.alive||o===m||!o.faction||o.faction===m.faction)continue;const d=ds(m,o);if(d<7&&d<td){tgt=o;td=d;}}
-  if(!tgt||td>8){m.aggro=false;m.mt-=.35;if(m.mt<=0){m.mt=1.5+Math.random();const a=Math.random()*Math.PI*2;const nx=m.hx+Math.cos(a)*2,ny=m.hy+Math.sin(a)*2;if(wk(nx,ny)){m.x=nx;m.y=ny;}}return;}
+  const ar=10*nightMult;
+  if(canAg()&&m.faction!==G.cls){const dp=ds(m,{x:px,y:py});if(dp<ar&&dp<td){tgt={x:px,y:py,ip:true};td=dp;}}
+  for(const o of mons){if(!o.alive||o===m||!o.faction||o.faction===m.faction)continue;const d=ds(m,o);if(d<ar*.8&&d<td){tgt=o;td=d;}}
+  if(!tgt||td>ar){m.aggro=false;m.mt-=.35;if(m.mt<=0){m.mt=1.5+Math.random();const a=Math.random()*Math.PI*2;const nx=m.hx+Math.cos(a)*3,ny=m.hy+Math.sin(a)*3;if(wk(nx,ny)){m.x=nx;m.y=ny;}}return;}
   m.aggro=true;
-  const tx=tgt.ip?px:tgt.x,ty=tgt.ip?py:tgt.y,a=Math.atan2(ty-m.y,tx-m.x),pd=m.ranged?3.5:1.2;
-  if(td>pd){const sp=m.spd*.28;const nx=m.x+Math.cos(a)*sp,ny=m.y+Math.sin(a)*sp;if(wk(nx,m.y))m.x=nx;if(wk(m.x,ny))m.y=ny;}
+  const tx=tgt.ip?px:tgt.x,ty=tgt.ip?py:tgt.y,a=Math.atan2(ty-m.y,tx-m.x),pd=m.ranged?4:1.5;
+  if(td>pd){const sp=m.spd*.28*nightMult;const nx=m.x+Math.cos(a)*sp,ny=m.y+Math.sin(a)*sp;if(wk(nx,m.y))m.x=nx;if(wk(m.x,ny))m.y=ny;}
   m.st-=.35;
-  if(m.ranged&&m.st<=0&&td<5){m.st=2+Math.random();projs.push({x:m.x,y:m.y,vx:Math.cos(a)*7,vy:Math.sin(a)*7,dmg:m.sDmg,col:m.sCol,life:.8,ico:m.spell,src:m.faction});if(tgt.ip)lg('combat',`${m.ico} ${m.name} fires!`);}
-  else if(!m.ranged&&td<1.3&&m.st<=0){m.st=1.2+Math.random()*.8;const dmg=m.atk+Math.floor(Math.random()*6)-2;
-    if(tgt.ip){G.hp=Math.max(0,G.hp-dmg);flash('df',120);sfxHit();lg('combat',`${m.ico} ${m.name} slashes you for ${dmg}!`);if(G.hp<=0){die();return;}}
+  if(m.ranged&&m.st<=0&&td<8){m.st=(2+Math.random())/nightMult;projs.push({x:m.x,y:m.y,vx:Math.cos(a)*8,vy:Math.sin(a)*8,dmg:m.sDmg,col:m.sCol,life:.9,ico:m.spell,src:m.faction});if(tgt.ip)lg('combat',`${m.ico} ${m.name} fires!`);}
+  else if(!m.ranged&&td<1.6&&m.st<=0){m.st=1.2+Math.random()*.8;const dmg=m.atk+Math.floor(Math.random()*6)-2;
+    if(tgt.ip){G.hp=Math.max(0,G.hp-dmg);stats.damageTaken+=dmg;flash('df',120);sfxHit();lg('combat',`${m.ico} ${m.name} slashes you for ${dmg}!`);if(G.hp<=0){die();return;}}
     else if(!tgt.ip){tgt.hp-=dmg;if(tgt.hp<=0){tgt.alive=false;fx(tgt.x,tgt.y,'#888',5);}}}
 }
 function ds(a,b){return Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2);}
+
+// ═══════════════════════════════════════
+// DAY / NIGHT
+// ═══════════════════════════════════════
+function isNight(){return dayTime>0.4&&dayTime<0.9;}
+function nightIntensity(){
+  // 0=day, 1=full night
+  if(dayTime<0.35)return 0;
+  if(dayTime<0.45)return(dayTime-0.35)/0.1;
+  if(dayTime<0.85)return 1;
+  if(dayTime<0.95)return 1-(dayTime-0.85)/0.1;
+  return 0;
+}
+let _lastNiApplied=-1;
+let _lastNightState=false;
+function tickDayNight(){
+  const ni=nightIntensity();
+  // Only update DOM style if value changed meaningfully
+  const niRounded=Math.round(ni*20)/20;
+  if(niRounded!==_lastNiApplied){
+    _lastNiApplied=niRounded;
+    const ov=document.getElementById('dn-ov');
+    if(ni>0.01){
+      const alpha=ni*0.72;
+      ov.style.background=`rgba(5,8,30,${alpha.toFixed(2)})`;
+    } else {
+      ov.style.background='transparent';
+    }
+  }
+  const nowNight=isNight();
+  if(nowNight!==_lastNightState){
+    _lastNightState=nowNight;
+    if(nowNight){
+      lg('info','🌙 Night falls. Monsters grow stronger and faster. XP doubled!');
+      not('🌙 NIGHT — monsters rage!');
+    } else {
+      lg('info','☀️ Dawn breaks. The world is safer.');
+      not('☀️ DAWN — safe again');
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+// LOOT DROPS
+// ═══════════════════════════════════════
+function dropLoot(x,y,gold,wood,gem,metal,xp){
+  const items=[];
+  if(gold>0)items.push({x,y,type:'gold',amt:gold,ico:'💰',col:'#fbbf24'});
+  if(wood>0)items.push({x,y,type:'wood',amt:wood,ico:'🪵',col:'#92400e'});
+  if(gem>0)items.push({x,y,type:'gem',amt:gem,ico:'💎',col:'#67e8f9'});
+  if(metal>0)items.push({x,y,type:'metal',amt:metal,ico:'⚙️',col:'#94a3b8'});
+  // Scatter each drop slightly
+  items.forEach((l,i)=>{
+    const a=(i/items.length)*Math.PI*2;
+    l.x=x+Math.cos(a)*0.6;
+    l.y=y+Math.sin(a)*0.6;
+    l.spawnT=performance.now();
+    lootDrops.push(l);
+  });
+}
+function applyLoot(l){
+  if(l.type==='gold'){G.gold+=l.amt;stats.goldEarned+=l.amt;}
+  else if(l.type==='wood')G.wood+=l.amt;
+  else if(l.type==='gem')G.gem+=l.amt;
+  else if(l.type==='metal')G.metal=(G.metal||0)+l.amt;
+  not(`${l.ico} +${l.amt}`);
+  updUI();
+}
 
 // ═══════════════════════════════════════
 // COMBAT — directional attack system
 // ═══════════════════════════════════════
 function doAtk(){
   if(atkCD>0)return;
-  // Aim at nearest enemy if no explicit aim
   if(!aimActive){
     let nearest=null,nd=999;
     for(const m of mons){if(!m.alive||(m.faction&&m.faction===G.cls))continue;const d=ds(G.pos,m);if(d<nd){nd=d;nearest=m;}}
-    if(nearest&&nd<6){aimAngle=Math.atan2(nearest.y-G.pos.y,nearest.x-G.pos.x);aimActive=true;}
+    if(nearest&&nd<12){aimAngle=Math.atan2(nearest.y-G.pos.y,nearest.x-G.pos.x);aimActive=true;}
     else{const dv2={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[G.dir]||[0,1];aimAngle=Math.atan2(dv2[1],dv2[0]);}
   }
   doAtkDirectional(aimAngle);
@@ -945,31 +1450,59 @@ function doAtk(){
 }
 
 function doAtkDirectional(angle){
-  if(G.cls==='wizard')castAngle(angle);else meleeAngle(angle);
+  if(G.cls==='wizard')castAngle(angle);
+  else pirateAtk(angle);
 }
 
-function meleeAngle(angle){
-  const SWEEP=Math.PI*.6; // 108° arc
-  let hit=false;
-  for(const m of mons){
-    if(!m.alive||(m.faction&&m.faction===G.cls))continue;
-    const toM=Math.atan2(m.y-G.pos.y,m.x-G.pos.x);
-    let diff=toM-angle;
-    while(diff>Math.PI)diff-=Math.PI*2;while(diff<-Math.PI)diff+=Math.PI*2;
-    if(ds(G.pos,m)<1.8&&Math.abs(diff)<SWEEP/2){
-      const dmg=20+(G.wepUp?12:0)+(G.leg.str||0)+Math.floor(Math.random()*8);
-      hitM(m,dmg);fx(m.x,m.y,'#fb923c',m.mega?12:7);sfxAttack();hit=true;
+function pirateAtk(angle){
+  const hs=G.hb[G.slot];
+  const wid=(hs&&hs.wep)?hs.wep:G.pirWep;
+  const wep=PIRWEPS.find(w=>w.id===wid)||PIRWEPS[0];
+  G.pirWep=wep.id;
+
+  if(wep.type==='melee'){
+    const SWEEP=Math.PI*.65;
+    let hit=false;
+    for(const m of mons){
+      if(!m.alive||(m.faction&&m.faction===G.cls))continue;
+      const toM=Math.atan2(m.y-G.pos.y,m.x-G.pos.x);
+      let diff=toM-angle;
+      while(diff>Math.PI)diff-=Math.PI*2;while(diff<-Math.PI)diff+=Math.PI*2;
+      if(ds(G.pos,m)<wep.size&&Math.abs(diff)<SWEEP/2){
+        const dmg=wep.dmg+(G.wepUp?8:0)+(G.leg.str||0)+Math.floor(Math.random()*8);
+        hitM(m,dmg);fx(m.x,m.y,wep.col,m.mega?12:7);hit=true;
+      }
     }
+    // Distinct melee sounds per weapon
+    if(wep.id==='ironblade'){beep(180,.08,'square',.7);setTimeout(()=>beep(140,.06,'sawtooth',.4),40);}
+    else{beep(220,.08,'sawtooth',.6);setTimeout(()=>beep(180,.06,'sawtooth',.4),40);}
+    if(!hit&&!G._swingMiss)sfxAttack();
+  } else {
+    const spd=wep.spd, life=8/spd+.3;
+    const spread=wep.spread||1;
+    for(let i=0;i<spread;i++){
+      const spreadA=spread>1?(angle+(i-(spread-1)/2)*0.25):angle;
+      projs.push({x:G.pos.x,y:G.pos.y,
+        vx:Math.cos(spreadA)*spd,vy:Math.sin(spreadA)*spd,
+        dmg:Math.floor(wep.dmg/spread)+(G.wepUp?5:0)+(G.leg.str||0),
+        col:wep.col,life,ico:wep.ico2||'💥',src:null,psize:wep.size});
+    }
+    stats.shotsFired+=spread;
+    // Distinct ranged sounds per weapon
+    if(wep.id==='cannon'){beep(55,.35,'sawtooth',.9);setTimeout(()=>beep(40,.25,'sawtooth',.6),60);}
+    else if(wep.id==='musket'){beep(320,.1,'square',.8);setTimeout(()=>beep(180,.08,'sawtooth',.4),30);}
+    else if(wep.id==='blunderbuss'){beep(200,.12,'sawtooth',.7);setTimeout(()=>beep(120,.1,'square',.5),40);}
+    else{beep(260,.1,'square',.6);} // pistol
   }
-  if(!hit){sfxAttack();}
-  // Update facing direction
   G.dir=angleToDir(angle);
+  atkCD=wep.cd;
 }
 
 function castAngle(angle){
   if(!G.spells.length){lg('sys','No spells! Find a Wizard Sage.');return;}
   let sid=G.spells[0];const hs=G.hb[G.slot];if(hs&&hs.spell&&G.spells.includes(hs.spell))sid=hs.spell;
   const spell=SPELLS.find(s=>s.id===sid);if(!spell)return;
+  stats.spellsCast++;
   if(spell.id==='heal'){G.hp=Math.min(G.maxHp,G.hp+40+(G.leg.int||0)*2);lg('spell','💚 Heal! +40 HP');fx(G.pos.x,G.pos.y,'#4ade80',8);sfxSpell('heal');return;}
   if(spell.id==='teleport'){const dx=Math.cos(angle)*5,dy=Math.sin(angle)*5;const nx=G.pos.x+dx,ny=G.pos.y+dy;if(wk(nx,ny)){G.pos.x=nx;G.pos.y=ny;lg('spell','✨ Blink!');}else lg('sys','Cannot blink there.');sfxSpell('teleport');return;}
   const spd=9,life=spell.range/spd+.4;
@@ -984,19 +1517,58 @@ function angleToDir(a){
 }
 
 function hitM(m,dmg){
-  m.hp-=dmg;
-  if(m.mega)lg('mega',`⭐ You strike ${m.name} for ${dmg}! (${Math.max(0,m.hp)}/${m.maxHp})`);
-  else if(m.faction)lg('combat',`${m.faction==='wizard'?'🔮':'⚔️'} ${m.name} takes ${dmg}!`);
-  else lg('combat',`⚔ ${m.name} takes ${dmg}!`);
+  // Wizard runestone bonus damage
+  const finalDmg=dmg+(G.cls==='wizard'?(wizardUpgrades.bonusDmg||0):0);
+  m.hp-=finalDmg;stats.damageDealt+=finalDmg;
+  if(m.mega)lg('mega',`⭐ You strike ${m.name} for ${finalDmg}! (${Math.max(0,m.hp)}/${m.maxHp})`);
+  else if(m.faction)lg('combat',`${m.faction==='wizard'?'🔮':'⚔️'} ${m.name} takes ${finalDmg}!`);
+  else lg('combat',`⚔ ${m.name} takes ${finalDmg}!`);
   if(m.hp<=0){
-    m.alive=false;G.xp+=m.xp;G.gold+=m.gold;G.wood+=m.wood;G.gem+=m.gem;
-    if(m.mega){lg('mega',`💥 ${m.dm||m.name+' DEFEATED!'}`);lg('loot',`🎁 MEGA LOOT: +${m.xp}XP +${m.gold}💰 +${m.wood}🪵 +${m.gem}💎`);notM(`⭐ +${m.gold}💰 +${m.wood}🪵 +${m.gem}💎`);fx(m.x,m.y,'#ff6b00',26);fx(m.x,m.y,m.gc||'#ff6b00',18);sfxLoot();}
-    else if(m.faction){const i=m.faction==='wizard'?'🔮':'⚔️';lg('loot',`${i} ${m.name} +${m.xp}XP +${m.gold}💰`);not(`${i} +${m.gold}💰`);fx(m.x,m.y,m.faction==='wizard'?'#a78bfa':'#fb923c',10);sfxLoot();}
-    else{lg('loot',`💀 ${m.name} slain! +${m.xp}XP +${m.gold}💰 +${m.wood}🪵${m.gem?' +'+m.gem+'💎':''}`);not(`+${m.gold}💰 +${m.wood}🪵`);fx(m.x,m.y,'#ef4444',7);sfxLoot();}
+    m.alive=false;
+    const xpMult=isNight()?2:1;
+    const xpGain=Math.floor(m.xp*xpMult);
+    G.xp+=xpGain;G.wood+=m.wood;G.gem+=m.gem;
+    const dropMetal=m.metal||0;
+    // Tavern bonus: +2💰 per kill
+    const goldBonus=pirateBuildState.tavern?2:0;
+    const totalGold=m.gold+goldBonus;
+    G.gold+=totalGold;stats.goldEarned+=totalGold;
+    if(m.gem>0)G.gem+=m.gem;
+    if(m.wood>0)G.wood+=m.wood;
+    if(dropMetal>0)G.metal=(G.metal||0)+dropMetal;
+    stats.monstersKilled++;
+    if(m.mega){
+      stats.megasKilled++;
+      lg('mega',`💥 ${m.dm||m.name+' DEFEATED!'}`);
+      lg('loot',`🎁 MEGA LOOT: +${xpGain}XP${xpMult>1?' (2x NIGHT!)':''} +${totalGold}💰 +${m.gem}💎 +${dropMetal}⚙️`);
+      notM(`⭐ MEGA SLAIN! +${totalGold}💰 +${dropMetal}⚙️`);
+      fx(m.x,m.y,'#ff6b00',26);fx(m.x,m.y,m.gc||'#ff6b00',18);sfxLoot();
+    } else if(m.faction){
+      const i=m.faction==='wizard'?'🔮':'⚔️';
+      lg('loot',`${i} ${m.name} +${xpGain}XP +${totalGold}💰`);
+      not(`${i} +${totalGold}💰`);fx(m.x,m.y,m.faction==='wizard'?'#a78bfa':'#fb923c',10);sfxLoot();
+    } else {
+      lg('loot',`💀 ${m.name} slain! +${xpGain}XP${xpMult>1?' 🌙2x':''} +${totalGold}💰`);
+      not(`+${totalGold}💰`);fx(m.x,m.y,'#ef4444',7);sfxLoot();
+    }
     lvlup();
   }
 }
 function lvlup(){if(G.xp>=G.level*60){G.level++;G.maxHp+=15;G.hp=Math.min(G.maxHp,G.hp+15);not(`🌟 LEVEL ${G.level}!`);lg('info',`★ LEVEL UP → ${G.level}! Max HP +15`);sfxLevelup();}}
+
+function activateBoost(){
+  if(!G)return;
+  if(boostActive){return;} // already running
+  if(boostCooldown>0){not(`⏳ Boost recharging… ${Math.ceil(boostCooldown)}s`);return;}
+  boostActive=true;boostTimer=BOOST_DURATION;
+  not('💨 BOOST!');
+  sfxSpell('lightning'); // quick zip sound
+  // Visual pulse on joystick
+  const jz=document.getElementById('jz');
+  jz.style.transition='box-shadow .1s';
+  jz.style.boxShadow='0 0 0 4px #10b981, 0 0 20px #10b981';
+  setTimeout(()=>{jz.style.boxShadow='';},200);
+}
 
 // ═══════════════════════════════════════
 // INTERACT
@@ -1012,16 +1584,273 @@ function openN(n){
   document.getElementById('nov').classList.add('on');
 }
 function hN(n,a){
-  closeN();if(['Got it!','Leave','DISENGAGE'].includes(a))return;
-  if(n.id==='merchant'&&a.startsWith('Buy')){if(G.gold>=10){G.gold-=10;const p=[['wood',5,'🪵'],['gem',2,'💎'],['gold',8,'💰']][Math.floor(Math.random()*3)];G[p[0]]+=p[1];lg('loot',`🎁 Mystery: +${p[1]}${p[2]}!`);not(`Mystery: +${p[1]}${p[2]}`);sfxLoot();}else lg('sys','Need 10💰');}
-  const sm={sage1:['ice',5],sage2:['lightning',10],sage3:['teleport',15],sage4:['thunder',25]};
-  if(sm[n.id]){const[sid,cost]=sm[n.id];if(G.gold>=cost){G.gold-=cost;lrnS(sid);}else lg('sys',`Need ${cost}💰`);}
-  if(n.id==='robot'&&a.startsWith('COMPLY')){if(G.gold>=80){G.gold-=80;SPELLS.forEach(s=>lrnS(s.id));notM('ALL SPELLS LEARNED 🤖');}else lg('sys','Need 80💰');}
-  if(n.id==='sw'&&a.startsWith('Build')){if(G.wood>=30){G.wood-=30;G.shipBuilt=true;G.spd=6.5;lg('info','⛵ Sloop built! You can now sail!');not('⛵ SHIP BUILT!');}else lg('sys',`Need 30🪵 (have ${G.wood})`);}
-  if(n.id==='ws'&&a.startsWith('Upgrade')){if(G.gold>=15&&G.gem>=5){G.gold-=15;G.gem-=5;G.wepUp=true;not('⚔️ Cutlass upgraded!');}else lg('sys','Need 15💰 + 5💎');}
-  if(n.id==='nav'&&a.startsWith('Reveal')){if(G.gold>=5){G.gold-=5;G.oceanRev=true;not('Ocean map revealed!');}else lg('sys','Need 5💰');}
+  closeN();
+  if(['Got it!','Leave','DISENGAGE','Decline'].includes(a))return;
+
+  // Merchant / frostmerch — mystery box, HP gem, potion
+  if(n.id==='merchant'||n.id==='frostmerch'||n.id==='portmerch'){
+    if(a.startsWith('Buy box')){
+      if(G.gold>=10){G.gold-=10;const p=[['wood',5,'🪵'],['gem',2,'💎'],['gold',8,'💰'],['metal',4,'⚙️']][Math.floor(Math.random()*4)];G[p[0]]=(G[p[0]]||0)+p[1];lg('loot',`🎁 Mystery: +${p[1]}${p[2]}!`);not(`Mystery: +${p[1]}${p[2]}`);sfxLoot();}
+      else lg('sys','Need 10💰');
+    }
+    if(a.startsWith('Buy HP Gem')){
+      if(G.gold>=5){G.gold-=5;G.hp=Math.min(G.maxHp,G.hp+60);lg('info','💚 HP Gem! +60 HP');not('💚 +60 HP!');sfxSpell('heal');}
+      else lg('sys','Need 5💰');
+    }
+    if(a.startsWith('Use Potion')){
+      if((G.potions||0)>0){G.potions--;G.hp=Math.min(G.maxHp,G.hp+120);lg('info','🧪 Potion! +120 HP');not('🧪 +120 HP!');sfxSpell('heal');}
+      else lg('sys','No potions! Brew at a Weaponsmith (4💎).');
+    }
+    if(a==='Snowberry Wine (5💰)'){
+      if(G.gold>=5){G.gold-=5;G.hp=Math.min(G.maxHp,G.hp+80);not('🍷 +80 HP!');sfxSpell('heal');}
+      else lg('sys','Need 5💰');
+    }
+  }
+
+  // Gem trader — sell gems, buy relics
+  if(n.id==='gemtrader'){
+    if(a==='Sell 3💎 (→15💰)'){
+      if((G.gem||0)>=3){G.gem-=3;G.gold+=15;not('💎→15💰 sold!');sfxLoot();}
+      else lg('sys',`Need 3💎 (have ${G.gem||0})`);
+    }
+    if(a==='Buy Relic (12💰)'){
+      if(G.gold>=12){G.gold-=12;G.maxHp+=20;G.hp=Math.min(G.maxHp,G.hp+20);not('🏺 Relic! +20 max HP');sfxLoot();}
+      else lg('sys','Need 12💰');
+    }
+  }
+
+  // Jungle trader — sell wood, buy elixir
+  if(n.id==='jungletrader'){
+    if(a==='Sell 5🪵 (→8💰)'){
+      if((G.wood||0)>=5){G.wood-=5;G.gold+=8;not('🪵→8💰!');sfxLoot();}
+      else lg('sys',`Need 5🪵 (have ${G.wood||0})`);
+    }
+    if(a==='Buy Elixir (15💰)'){
+      if(G.gold>=15){G.gold-=15;G.maxHp+=30;G.hp=Math.min(G.maxHp,G.hp+30);not('🧪 Elixir! +30 max HP');sfxLoot();}
+      else lg('sys','Need 15💰');
+    }
+  }
+
+  // Wizard sages — spell learning (village + towns)
+  const spellMap={
+    sage1:['ice',5],sage2:['lightning',10],sage3:['teleport',15],sage4:['thunder',25],
+    witch:['void',30],icekeeper:['ice',35,'blizzard'],sandmage:['thunder',20],
+    shaman:['ice',25,'thorn'],volcanomage:['fireball',50,'meteor'],portmage:['void',40,'maelstrom'],
+  };
+  // Handle special "learn spell" buttons for town NPCs
+  if(a.startsWith('Learn ') || n.id in spellMap){
+    const entry=spellMap[n.id];
+    if(entry){
+      const[sid,cost]=entry;
+      if(G.gold>=cost){G.gold-=cost;lrnS(sid);}else lg('sys',`Need ${cost}💰`);
+    }
+  }
+  // Generic town spell learn buttons
+  const learnMatch=a.match(/Learn (\w+) \((\d+)💰\)/);
+  if(learnMatch){
+    const sid=learnMatch[1].toLowerCase();
+    const cost=parseInt(learnMatch[2]);
+    const spellId=['fireball','lightning','ice','heal','teleport','thunder','void'].find(s=>s.startsWith(sid)||sid.startsWith(s))||sid;
+    if(G.gold>=cost){G.gold-=cost;lrnS(spellId);}else lg('sys',`Need ${cost}💰`);
+  }
+
+  // OMNIBUS-7
+  if(n.id==='robot'&&a.startsWith('COMPLY')){
+    if(G.gold>=80){
+      G.gold-=80;
+      SPELLS.filter(s=>s.id!=='heal').forEach(s=>lrnS(s.id));
+      notM('⚡ ALL ATTACK SPELLS LOADED 🤖 [HEAL PROTOCOL LOCKED]');
+      lg('spell','🤖 OMNIBUS-7 UPLOAD COMPLETE');
+    }else lg('sys','Need 80💰');
+  }
+
+  // ── WIZARD ARCANE FORGE ────────────────────────────────────────────
+  if(n.id==='arcaneforge'){
+    const forgeMap={
+      'Runestone (6⚙️)':  {id:'runestone',  cost:6},
+      'Iron Staff (12⚙️)': {id:'iron_staff', cost:12},
+      'Golem Core (20⚙️)': {id:'golem_core', cost:20},
+      'Mana Shield (15⚙️)':{id:'mana_shield',cost:15},
+      'Rune Cannon (25⚙️)':{id:'rune_cannon',cost:25},
+    };
+    const rec=forgeMap[a];
+    if(rec){
+      const metal=G.metal||0;
+      if(metal<rec.cost){lg('sys',`Need ${rec.cost}⚙️ (have ${metal})`);updUI();return;}
+      G.metal-=rec.cost;
+      if(rec.id==='runestone'){
+        wizardUpgrades.bonusDmg+=20;
+        not('🔮 Runestone! +20 spell dmg');lg('spell','🔮 Runestone absorbed — spell damage permanently +20');sfxLevelup();
+      } else if(rec.id==='iron_staff'){
+        // Add iron staff to hotbar as melee-ranged weapon
+        const slot=G.hb.findIndex(h=>!h.ico);
+        if(slot>=0)G.hb[slot]={ico:'🪄',lbl:'Iron Staff',spell:'staff_melee'};
+        buildHB();not('🪄 Iron Staff forged!');lg('spell','🪄 Iron Staff — melee range, uses spell power');sfxLoot();
+      } else if(rec.id==='golem_core'){
+        wizardUpgrades.golem={x:G.pos.x+1,y:G.pos.y,hp:200,maxHp:200,alive:true};
+        mons.push({id:'golem_ally',name:'Iron Golem',ico:'🤖',hp:200,maxHp:200,atk:35,xp:0,gold:0,wood:0,gem:0,metal:0,spd:.6,
+          uid:'player_golem',x:G.pos.x+1,y:G.pos.y,alive:true,aggro:false,faction:'wizard',mt:0,hx:G.pos.x+1,hy:G.pos.y,st:0,sst:99});
+        not('🤖 Iron Golem summoned!');lg('spell','🤖 Iron Golem joins your side — faction:wizard');sfxLevelup();
+      } else if(rec.id==='mana_shield'){
+        wizardUpgrades.manaShield=true;G.maxHp+=50;G.hp=Math.min(G.maxHp,G.hp+50);
+        not('🛡️ Mana Shield! +50 max HP');lg('spell','🛡️ Mana Shield active — +50 max HP, 20% dmg reduction');sfxLevelup();
+      } else if(rec.id==='rune_cannon'){
+        const slot=G.hb.findIndex(h=>!h.ico);
+        if(slot>=0)G.hb[slot]={ico:'💥',lbl:'Rune Cannon',spell:'rune_cannon'};
+        buildHB();not('💥 Rune Cannon forged!');lg('spell','💥 Rune Cannon — fires large arcane bolts');sfxLoot();
+      }
+    }
+  }
+
+  // ── PIRATE BUILDING SYSTEM ─────────────────────────────────────────
+  if(n.id==='builder'){
+    const buildMap={
+      'Tavern (30💰)':    {id:'tavern',    cost:30},
+      'Fort (60💰)':      {id:'fort',      cost:60},
+      'Lighthouse (25💰)':{id:'lighthouse',cost:25},
+      'Dry Dock (50💰)':  {id:'drydock',   cost:50},
+    };
+    const rec=buildMap[a];
+    if(rec){
+      if(pirateBuildState[rec.id]){lg('sys',`${rec.id} already built!`);updUI();return;}
+      if(G.gold<rec.cost){lg('sys',`Need ${rec.cost}💰 (have ${G.gold})`);updUI();return;}
+      G.gold-=rec.cost;
+      pirateBuildState[rec.id]=true;
+      if(rec.id==='tavern'){not('🍺 Tavern built! +2💰 per kill');lg('loot','🍺 Tavern open — crew bonuses active (2💰 per kill)');}
+      else if(rec.id==='fort'){G.maxHp+=80;G.hp=Math.min(G.maxHp,G.hp+80);not('🏰 Fort built! +80 max HP');lg('loot','🏰 Sea Fort constructed — max HP +80, cannon emplacements active');}
+      else if(rec.id==='lighthouse'){G.oceanRev=true;not('🏮 Lighthouse lit! Ocean revealed');lg('loot','🏮 Lighthouse guides your fleet — full ocean map revealed forever');}
+      else if(rec.id==='drydock'){not('⚓ Dry Dock built! Brigantine available');lg('loot','⚓ Dry Dock complete — Brigantine class unlocked at Shipwright');}
+      sfxLevelup();
+    }
+  }
+
+  // Admiral — ship upgrades (Skull Port)
+  if(n.id==='admiral'){
+    if(a==='Reinforced Hull (30💰)'){
+      if(G.gold>=30){G.gold-=30;G.maxHp+=60;G.hp=Math.min(G.maxHp,G.hp+60);not('⚓ Hull reinforced! +60 max HP');sfxLoot();}
+      else lg('sys','Need 30💰');
+    }
+    if(a==='Extra Sail (20💰)'){
+      if(G.gold>=20){G.gold-=20;G.spd=Math.min(G.spd+1,9.5);not('⛵ Extra sail! +1 speed');sfxLoot();}
+      else lg('sys','Need 20💰');
+    }
+  }
+
+  // Gravedigger charm
+  if(n.id==='gravedigger'&&a==='Buy Charm (20💰)'){
+    if(G.gold>=20){G.gold-=20;G.maxHp+=25;G.hp=Math.min(G.maxHp,G.hp+25);not('🧿 Ghost charm! +25 max HP');sfxLoot();}
+    else lg('sys','Need 20💰');
+  }
+
+  // Frost merchant (cheap potions)
+  if(n.id==='frostmerch'&&a==='Brew Potion (3💎)'){
+    if((G.gem||0)>=3){G.gem-=3;G.potions=(G.potions||0)+1;not('🧪 Cold-brewed potion! (+1)');sfxLoot();}
+    else lg('sys',`Need 3💎 (have ${G.gem||0})`);
+  }
+
+  // Ship building
+  if(n.id==='sw'){
+    if(a.startsWith('Build Sloop')){
+      if(!G.shipBuilt){
+        if(G.wood>=30){G.wood-=30;G.shipBuilt=true;G.spd=6.5;not('⛵ SLOOP BUILT!');lg('info','⛵ Sloop ready — sail the seas!');}
+        else lg('sys',`Need 30🪵 (have ${G.wood})`);
+      } else lg('sys','Ship already built!');
+    }
+    if(a.startsWith('Build Brigantine')){
+      if(!pirateBuildState.drydock){lg('sys','Build Dry Dock first (Port Builder).');updUI();return;}
+      if(G.wood>=60){G.wood-=60;G.shipBuilt=true;G.spd=7.5;G.maxHp+=40;not('🚢 BRIGANTINE BUILT!');lg('info','🚢 Brigantine — faster, armored, +40 max HP');}
+      else lg('sys',`Need 60🪵 (have ${G.wood})`);
+    }
+  }
+
+  // Weaponsmith
+  if(n.id==='ws'||n.id==='horseman'||n.id==='snowsmith'||n.id==='desertsmith'||n.id==='huntersmith'||n.id==='volsmith'||n.id==='portmerch'){
+    const wepCosts={
+      'Musket (8⚙️)':{id:'musket',cost:8},'Blunderbuss (12⚙️)':{id:'blunderbuss',cost:12},
+      'Iron Sword (6⚙️)':{id:'ironblade',cost:6},'Cannon (20⚙️)':{id:'cannon',cost:20},
+      'Spectral Blade (18⚙️)':{id:'ironblade',cost:18},'Ice Cannon (25⚙️)':{id:'cannon',cost:25},
+      'Scorpion Dagger (10⚙️)':{id:'ironblade',cost:10},'Jungle Bow (12⚙️)':{id:'musket',cost:12},
+      'Flameshot (30⚙️)':{id:'cannon',cost:30},'Lava Blade (20⚙️)':{id:'ironblade',cost:20},
+      'Grapeshot (25⚙️)':{id:'blunderbuss',cost:25},'Poison Blade (15⚙️)':{id:'ironblade',cost:15},
+    };
+    const rec=wepCosts[a];
+    if(rec){
+      const metal=G.metal||0;
+      if(metal>=rec.cost){
+        G.metal=metal-rec.cost;
+        if(!G.weapons)G.weapons=[];
+        if(!G.weapons.includes(rec.id))G.weapons.push(rec.id);
+        const wep=PIRWEPS.find(w=>w.id===rec.id);
+        if(wep){
+          const slot=G.hb.findIndex(h=>!h.ico);
+          if(slot>=0)G.hb[slot]={ico:wep.ico,lbl:a.split(' (')[0],wep:wep.id};
+          buildHB();lg('loot',`⚙️ Forged: ${a.split(' (')[0]}!`);not(`⚙️ ${a.split(' (')[0]} forged!`);sfxLoot();
+        }
+      }else lg('sys',`Need ${rec.cost}⚙️ (have ${metal})`);
+    }
+    if(a==='Brew Potion (4💎)'){
+      if((G.gem||0)>=4){G.gem-=4;G.potions=(G.potions||0)+1;not('🧪 Brewed! (+1)');sfxLoot();}
+      else lg('sys',`Need 4💎 (have ${G.gem||0})`);
+    }
+    if(a==='Hull Plate (15⚙️)'){
+      if((G.metal||0)>=15){G.metal-=15;G.shipUpgrades=(G.shipUpgrades||0)+1;G.maxHp+=30;G.hp=Math.min(G.maxHp,G.hp+30);not('⚓ Hull! +30 max HP');sfxLoot();}
+      else lg('sys',`Need 15⚙️`);
+    }
+    if(a==='Speed Keel (10⚙️)'){
+      if((G.metal||0)>=10){G.metal-=10;G.spd=Math.min(G.spd+0.8,9);not('⛵ Speed keel! +0.8 spd');sfxLoot();}
+      else lg('sys',`Need 10⚙️`);
+    }
+  }
+
+  if(n.id==='nav'&&a.startsWith('Reveal')){if(G.gold>=5){G.gold-=5;G.oceanRev=true;not('Ocean revealed!');}else lg('sys','Need 5💰');}
+
+  // Riddle
+  if(n.riddle&&a==='Accept challenge'){openRiddleModal(n);return;}
+
   updUI();
 }
+
+// ── RIDDLE MODAL (replaces browser prompt) ──────────────────────────
+let _riddleNpc=null, _riddleData=null;
+function openRiddleModal(n){
+  _riddleNpc=n;
+  _riddleData=RIDDLES[Math.floor(Math.random()*RIDDLES.length)];
+  document.getElementById('rdl-ico').textContent=n.ico;
+  document.getElementById('rdl-title').textContent=`🧩 ${n.name}`;
+  document.getElementById('rdl-q').textContent=`"${_riddleData.q}"`;
+  document.getElementById('rdl-inp').value='';
+  document.getElementById('rdl-ov').classList.add('on');
+  setTimeout(()=>document.getElementById('rdl-inp').focus(),100);
+}
+function closeRiddleModal(){document.getElementById('rdl-ov').classList.remove('on');_riddleNpc=null;_riddleData=null;}
+function submitRiddle(){
+  if(!_riddleData)return;
+  const ans=document.getElementById('rdl-inp').value.trim().toLowerCase();
+  const correct=_riddleData.a.some(x=>ans===x||ans.includes(x));
+  closeRiddleModal();
+  if(correct){
+    G.xp+=_riddleData.xp;G.riddlesSolved=(G.riddlesSolved||0)+1;stats.riddlesSolved++;
+    not(`✅ CORRECT! +${_riddleData.xp} XP`);
+    lg('riddle',`✅ ${_riddleNpc?.name||'Riddler'}: Correct! +${_riddleData.xp} XP. Solved: ${G.riddlesSolved}`);
+    sfxLevelup();lvlup();
+  } else {
+    const pen=40;G.hp=Math.max(1,G.hp-pen);
+    flash('df',400);not(`❌ Wrong! -${pen} HP`);
+    lg('riddle',`❌ Wrong! Answer: "${_riddleData.a[0]}". -${pen} HP`);sfxHit();
+  }
+  updUI();
+}
+function fleeRiddle(){
+  if(!G)return;
+  const pen=20;G.hp=Math.max(1,G.hp-pen);
+  flash('df',200);not(`😨 Fled! -${pen} HP`);
+  lg('riddle','You flee the riddle in shame. -20 HP');sfxHit();
+  closeRiddleModal();updUI();
+}
+// Wire up riddle modal buttons
+document.getElementById('rdl-submit').addEventListener('click',submitRiddle);
+document.getElementById('rdl-skip').addEventListener('click',fleeRiddle);
+document.getElementById('rdl-inp').addEventListener('keydown',e=>{if(e.key==='Enter')submitRiddle();});
 function lrnS(id){if(G.spells.includes(id))return;G.spells.push(id);const s=SPELLS.find(x=>x.id===id);if(s){lg('spell',`${s.ico} Learned: ${s.name}!`);not(`Learned: ${s.name} ${s.ico}`);sfxLoot();const e=G.hb.findIndex(h=>!h.ico);if(e>=0)G.hb[e]={ico:s.ico,lbl:s.name,spell:id};buildHB();updSP();}}
 function closeN(){document.getElementById('nov').classList.remove('on');}
 
@@ -1037,10 +1866,13 @@ function die(){
 function rebirth(cls){
   document.getElementById('ds').style.display='none';
   const lg2={lives:(G.leg.lives||0)+1,int:(G.leg.int||0)+(cls==='wizard'?5:2),str:(G.leg.str||0)+(cls==='pirate'?5:2)};
-  mons=[];projs=[];parts=[];
+  stats.deathCount++;
+  mons=[];projs=[];parts=[];lootDrops=[];bossArenas=[];
   spawnedChunks.clear();
   initSpawns();G=fresh(cls,lg2);
-  setBadge(cls);buildHB();updUI();
+  _lastHP=-1;_lastMaxHP=-1;_lastLV=-1;_lastGo=-1;_lastWo=-1;_lastGe=-1;_lastMt=-1;_lastArea='';
+  boostActive=false;boostTimer=0;boostCooldown=0;
+  setBadge(cls);buildHB();initElCache();updUI();
   lg('info',`✨ REBORN as ${cls.toUpperCase()}. Legacy: +${lg2.int}INT +${lg2.str}STR`);
   lastT=performance.now();animId=requestAnimationFrame(loop);
 }
@@ -1057,11 +1889,15 @@ function flash(id,dur){const e=document.getElementById(id);e.style.opacity='1';s
 function draw(){
   if(!G)return;
   const W=gc.width,H=gc.height;
-  ctx.fillStyle='#05080f';ctx.fillRect(0,0,W,H);
+  // Sky color shifts at night
+  const ni=nightIntensity();
+  const skyR=Math.round(5*(1-ni)+2*ni),skyG=Math.round(8*(1-ni)+4*ni),skyB=Math.round(15*(1-ni)+20*ni);
+  ctx.fillStyle=`rgb(${skyR},${skyG},${skyB})`;ctx.fillRect(0,0,W,H);
+
   const camX=G.pos.x-W/2/T,camY=G.pos.y-H/2/T;
   const sx0=Math.floor(camX)-1,sy0=Math.floor(camY)-1,sx1=Math.ceil(camX+W/T)+1,sy1=Math.ceil(camY+H/T)+1;
   ctx.imageSmoothingEnabled=false;
-  // Tiles (infinite — call getTileAt for each position)
+  // Tiles
   for(let ty=sy0;ty<sy1;ty++)for(let tx=sx0;tx<sx1;tx++){
     const px2=Math.round((tx-camX)*T),py2=Math.round((ty-camY)*T);
     const t=getTileAt(tx,ty);
@@ -1070,13 +1906,11 @@ function draw(){
   // Grid
   ctx.strokeStyle='rgba(0,0,0,.12)';ctx.lineWidth=.5;
   for(let ty=sy0;ty<sy1;ty++)for(let tx=sx0;tx<sx1;tx++)ctx.strokeRect(Math.round((tx-camX)*T),Math.round((ty-camY)*T),T,T);
-  // Safe zone glow
-  const dv2=dv(G.pos.x,G.pos.y);
-  if(dv2<SAFE_R*1.5){ctx.fillStyle=`rgba(255,220,120,${Math.max(0,1-dv2/SAFE_R)*.04})`;ctx.fillRect(0,0,W,H);}
+
   // NPCs
   for(const n of npcs){
     if(n.wiz&&G.cls!=='wizard')continue;if(n.pir&&G.cls!=='pirate')continue;
-    const sx=(n.x-camX)*T,sy=(n.y-camY)*T;if(sx<-T||sx>W+T||sy<-T||sy>H+T)continue;
+    const sx=(n.x-camX)*T,sy=(n.y-camY)*T;if(sx<-T||sx>W+T*2||sy<-T||sy>H+T*2)continue;
     ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.ellipse(sx+T/2,sy+T-5,T*.23,T*.09,0,0,Math.PI*2);ctx.fill();
     ctx.font=`${T-9}px serif`;ctx.textAlign='center';ctx.fillText(n.ico,sx+T/2,sy+T-5);
     ctx.font='5px "Press Start 2P"';ctx.fillStyle='#f59e0b';ctx.fillText(n.name.split(' ').pop(),sx+T/2,sy-2);
@@ -1085,7 +1919,7 @@ function draw(){
   // Monsters
   for(const m of mons){
     if(!m.alive)continue;
-    const sx=(m.x-camX)*T,sy=(m.y-camY)*T;if(sx<-T*2||sx>W+T||sy<-T*2||sy>H+T)continue;
+    const sx=(m.x-camX)*T,sy=(m.y-camY)*T;if(sx<-T*2||sx>W+T*2||sy<-T*2||sy>H+T*2)continue;
     const isM=m.mega===true,isF=!!m.faction,sz=isM?T+11:T-9,bw=isM?T+7:T-9;
     ctx.fillStyle='rgba(0,0,0,'+(isM?.4:.22)+')';ctx.beginPath();ctx.ellipse(sx+T/2,sy+T-5,isM?T*.34:T*.22,isM?T*.11:T*.08,0,0,Math.PI*2);ctx.fill();
     if(isM){const p=(Math.sin(performance.now()/400)+1)*.5;ctx.shadowColor=m.gc||'rgba(255,100,0,.8)';ctx.shadowBlur=16+p*16;}
@@ -1099,70 +1933,304 @@ function draw(){
     const hp=m.hp/m.maxHp;ctx.fillStyle=isM?(hp>.5?'#ff6b00':'#dc2626'):isF?(m.faction==='wizard'?'#a78bfa':'#fb923c'):(hp>.5?'#10b981':'#ef4444');
     ctx.fillRect(sx+T/2-bw/2,by,bw*hp,bh);
   }
-  // Aim direction indicator on player
+  // Town decorations + name banners
+  const now1=performance.now();
+  for(const town of TOWNS){
+    const tsx=(town.cx-camX)*T+T/2,tsy=(town.cy-camY)*T+T/2;
+    const playerDist=Math.sqrt((G.pos.x-town.cx)**2+(G.pos.y-town.cy)**2);
+    if(playerDist>town.r*5)continue;
+    const showDist=town.r*4;
+    if(playerDist<showDist){
+      const alpha=Math.min(1,(showDist-playerDist)/showDist*2.5);
+      ctx.globalAlpha=alpha;
+      ctx.font='8px "Press Start 2P"';ctx.textAlign='center';
+      ctx.fillStyle=town.mapColor||'#fbbf24';
+      ctx.fillText(`${town.ico} ${town.name}`,tsx,tsy-town.r*T-10);
+      ctx.globalAlpha=1;
+    }
+    ctx.font='18px serif';ctx.textAlign='center';
+    const decos=TOWN_DECOS[town.id]||[];
+    for(let i=0;i<decos.length;i++){
+      const ddx=(sr(town.id.charCodeAt(0)*17+i*113)-.5)*town.r*1.6;
+      const ddy=(sr(town.id.charCodeAt(0)*31+i*77)-.5)*town.r*1.6;
+      const wx=town.cx+ddx,wy=town.cy+ddy;
+      const sx=(wx-camX)*T,sy=(wy-camY)*T;
+      if(sx<-T*2||sx>W+T*2||sy<-T*2||sy>H+T*2)continue;
+      const bob=Math.sin(now1/900+i*1.3)*3;
+      ctx.fillText(decos[i%decos.length],sx,sy+bob);
+    }
+  }
+  // Boss arenas
+  for(const a of bossArenas){
+    const asx=(a.x-camX)*T,asy=(a.y-camY)*T;
+    if(asx<-T*8||asx>W+T*8||asy<-T*8||asy>H+T*8)continue;
+    const pulse=(Math.sin(performance.now()/600)+1)*.5;
+    ctx.strokeStyle=`rgba(200,30,30,${0.3+pulse*.3})`;
+    ctx.lineWidth=2;ctx.setLineDash([8,8]);
+    ctx.beginPath();ctx.arc(asx+T/2,asy+T/2,a.r*T,0,Math.PI*2);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font='6px "Press Start 2P"';ctx.textAlign='center';
+    ctx.fillStyle=`rgba(255,80,80,${0.6+pulse*.4})`;
+    ctx.fillText('⭐ LAIR',asx+T/2,asy-a.r*T-4);
+  }
+  // Ground loot
+  const now2=performance.now();
+  for(const l of lootDrops){
+    const lsx=(l.x-camX)*T,lsy=(l.y-camY)*T;
+    if(lsx<-T||lsx>W+T*2||lsy<-T||lsy>H+T*2)continue;
+    const age=Math.min(1,(now2-l.spawnT)/500);
+    const bob=Math.sin(now2/400+l.x)*3;
+    ctx.globalAlpha=age*0.95;ctx.shadowColor=l.col||'#fbbf24';ctx.shadowBlur=8;
+    ctx.font='16px serif';ctx.textAlign='center';
+    ctx.fillText(l.ico,lsx+T/2,lsy+T/2+bob);
+    ctx.shadowBlur=0;ctx.globalAlpha=1;
+  }
+  // HP Gems
+  for(const g of hpGems){
+    if(!g.alive)continue;
+    const gsx=(g.x-camX)*T,gsy=(g.y-camY)*T;
+    if(gsx<-T||gsx>W+T*2||gsy<-T||gsy>H+T*2)continue;
+    const pulse=(Math.sin(performance.now()/500+g.x)+1)*.5;
+    ctx.shadowColor='#4ade80';ctx.shadowBlur=6+pulse*10;
+    ctx.font='16px serif';ctx.textAlign='center';ctx.fillText('💚',gsx+T/2,gsy+T/2+5);
+    ctx.shadowBlur=0;
+  }
+  // Projectiles
+  for(const p of projs){
+    const sx=(p.x-camX)*T,sy=(p.y-camY)*T;
+    ctx.shadowColor=p.col;ctx.shadowBlur=13;
+    ctx.font=`${Math.round(12+(p.psize||1)*6)}px serif`;
+    ctx.textAlign='center';ctx.fillText(p.ico||'•',sx,sy+8);ctx.shadowBlur=0;
+  }
+  // Particles
+  for(const p of parts){
+    const f=1-p.life/p.ml,wx=p.x+p.vx*f,wy=p.y+p.vy*f;
+    const sx=(wx-camX)*T,sy=(wy-camY)*T;
+    ctx.globalAlpha=p.life/p.ml;ctx.fillStyle=p.col;
+    ctx.beginPath();ctx.arc(sx,sy,(p.size||3)*(p.life/p.ml),0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  // Safe zone glow
+  const dv2=dv(G.pos.x,G.pos.y);
+  if(dv2<SAFE_R*1.5){ctx.fillStyle=`rgba(255,220,120,${Math.max(0,1-dv2/SAFE_R)*.04})`;ctx.fillRect(0,0,W,H);}
+
+  // Vignette
+  const vig=ctx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75);vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,0,0,.5)');ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);
+
+  // Player (always dead-center)
+  const cpx=W/2,cpy=H/2;
+  ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(cpx,cpy+T-5,T*.26,T*.1,0,0,Math.PI*2);ctx.fill();
+  const playerTile=getTileAt(Math.floor(G.pos.x),Math.floor(G.pos.y));
+  const onWater=G.shipBuilt&&TBLOCK.has(playerTile);
+  // Boost motion trail
+  if(boostActive){
+    const boostPct=boostTimer/BOOST_DURATION;
+    const trailDir=G.dir;
+    const tx=trailDir==='left'?1:trailDir==='right'?-1:0;
+    const ty=trailDir==='up'?1:trailDir==='down'?-1:0;
+    for(let i=1;i<=4;i++){
+      ctx.globalAlpha=(0.35-(i*.07))*boostPct;
+      ctx.font=`${T-1-i*3}px serif`;ctx.textAlign='center';
+      ctx.fillText(G.cls==='wizard'?'🧙':'🏴‍☠️',cpx+tx*i*10,cpy+T-4+ty*i*10);
+    }
+    ctx.globalAlpha=1;
+    ctx.strokeStyle=`rgba(16,185,129,${0.5*boostPct})`;ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(cpx,cpy+T/2-4,T*.5,0,Math.PI*2);ctx.stroke();
+  }
+  ctx.shadowColor=G.cls==='wizard'?'rgba(167,139,250,.9)':'rgba(251,146,60,.9)';ctx.shadowBlur=boostActive?24:16;
+  if(onWater){
+    ctx.font=`${T+10}px serif`;ctx.textAlign='center';ctx.fillText('⛵',cpx,cpy+T+4);
+    ctx.shadowColor='rgba(251,146,60,.9)';ctx.shadowBlur=10;
+    ctx.font=`${T-10}px serif`;ctx.fillText('🏴‍☠️',cpx,cpy+T-10);
+  }else{
+    ctx.font=`${T-1}px serif`;ctx.textAlign='center';ctx.fillText(G.cls==='wizard'?'🧙':'🏴‍☠️',cpx,cpy+T-4);
+  }
+  ctx.shadowBlur=0;
+  if(atkCD>0){ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(cpx,cpy+T/2-4,T*.43,-Math.PI/2,-Math.PI/2+(atkCD/.5)*Math.PI*2);ctx.stroke();}
+
+  // Aim direction indicator
   if(aimActive){
-    const cpx=W/2+4,cpy=H/2+T*.4;
     const ar=T*.65,ax=cpx+Math.cos(aimAngle)*ar,ay=cpy+Math.sin(aimAngle)*ar;
     ctx.strokeStyle=G.cls==='wizard'?'rgba(167,139,250,.7)':'rgba(251,146,60,.7)';
     ctx.lineWidth=2;ctx.setLineDash([4,4]);
-    ctx.beginPath();ctx.moveTo(cpx,cpy);ctx.lineTo(ax,ay);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cpx,cpy+T*.4);ctx.lineTo(ax,ay);ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle=G.cls==='wizard'?'rgba(167,139,250,.9)':'rgba(251,146,60,.9)';
     ctx.beginPath();ctx.arc(ax,ay,4,0,Math.PI*2);ctx.fill();
   }
-  // Projectiles
-  for(const p of projs){const sx=(p.x-camX)*T,sy=(p.y-camY)*T;ctx.shadowColor=p.col;ctx.shadowBlur=13;ctx.font='19px serif';ctx.textAlign='center';ctx.fillText(p.ico||'•',sx,sy+8);ctx.shadowBlur=0;}
-  // Particles
-  for(const p of parts){const f=1-p.life/p.ml,wx=p.x+p.vx*f,wy=p.y+p.vy*f;const sx=(wx-camX)*T,sy=(wy-camY)*T;ctx.globalAlpha=p.life/p.ml;ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(sx,sy,(p.size||3)*(p.life/p.ml),0,Math.PI*2);ctx.fill();}
-  ctx.globalAlpha=1;
-  // Player
-  const cpx=W/2,cpy=H/2;
-  ctx.fillStyle='rgba(0,0,0,.32)';ctx.beginPath();ctx.ellipse(cpx,cpy+T-5,T*.26,T*.1,0,0,Math.PI*2);ctx.fill();
-  ctx.shadowColor=G.cls==='wizard'?'rgba(167,139,250,.9)':'rgba(251,146,60,.9)';ctx.shadowBlur=16;
-  ctx.font=`${T-1}px serif`;ctx.textAlign='center';ctx.fillText(G.cls==='wizard'?'🧙':'🏴‍☠️',cpx,cpy+T-4);ctx.shadowBlur=0;
-  if(atkCD>0){ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(cpx,cpy+T/2-4,T*.43,-Math.PI/2,-Math.PI/2+(atkCD/.5)*Math.PI*2);ctx.stroke();}
-  // Vignette
-  const vig=ctx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75);vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,0,0,.5)');ctx.fillStyle=vig;ctx.fillRect(0,0,W,H);
 }
 
+
 // ═══════════════════════════════════════
-// MINIMAP (infinite — sample around player)
+// MINIMAP — cached offscreen, redraws every 2s
 // ═══════════════════════════════════════
+let _miniCache=null, _miniCacheW=0, _miniCacheH=0, _miniLastDraw=0;
+let _miniLastX=-999, _miniLastY=-999;
 function drawMini(canvas,w,h){
   if(!G||!canvas)return;
-  const mc=canvas.getContext('2d');
-  const VIEW=30; // tiles visible on minimap in each direction
-  const ms=w/(VIEW*2),mh2=h/(VIEW*2);
+  const now=performance.now();
   const px2=G.pos.x,py2=G.pos.y;
+  const movedFar=Math.abs(px2-_miniLastX)>8||Math.abs(py2-_miniLastY)>8;
+  // Only redraw minimap every 2 seconds OR if moved significantly
+  if(_miniCache&&_miniCacheW===w&&_miniCacheH===h&&!movedFar&&now-_miniLastDraw<2000){
+    canvas.getContext('2d').drawImage(_miniCache,0,0);
+    // Draw player dot live every frame (cheap)
+    const mc=canvas.getContext('2d');
+    const VIEW=150;
+    const ms=w/(VIEW*2),mh2=h/(VIEW*2);
+    mc.fillStyle='#fff';mc.beginPath();mc.arc(VIEW*ms,VIEW*mh2,2.5,0,Math.PI*2);mc.fill();
+    return;
+  }
+  // Full redraw
+  _miniLastDraw=now;_miniLastX=px2;_miniLastY=py2;
+  if(!_miniCache||_miniCacheW!==w||_miniCacheH!==h){
+    _miniCache=document.createElement('canvas');_miniCache.width=w;_miniCache.height=h;
+    _miniCacheW=w;_miniCacheH=h;
+  }
+  const mc=_miniCache.getContext('2d');
+  const VIEW=150;
+  const ms=w/(VIEW*2),mh2=h/(VIEW*2);
   for(let dy=-VIEW;dy<VIEW;dy++)for(let dx=-VIEW;dx<VIEW;dx++){
     const tx=Math.floor(px2)+dx,ty=Math.floor(py2)+dy;
     const t=getTileAt(tx,ty);
-    let c;switch(t){case TR.G:c='#3a7d1a';break;case TR.W:c='#1a50b8';break;case TR.DP:c='#0a2840';break;case TR.F:c='#1a3d0a';break;case TR.S:c='#b07822';break;case TR.ST:c='#606060';break;case TR.D:c='#200808';break;case TR.DK:c='#7a5030';break;default:c='#111';}
-    if((t===TR.W||t===TR.DP)&&!G.shipBuilt&&!G.oceanRev)c='#060c18';
+    let c;switch(t){case TR.G:c='#3a7d1a';break;case TR.W:c='#1a50b8';break;case TR.DP:c='#0a2840';break;case TR.F:c='#1a3d0a';break;case TR.S:c='#b07822';break;case TR.ST:c='#8a9ab0';break;case TR.D:c='#200808';break;case TR.DK:c='#7a5030';break;default:c='#111';}
+    // Ocean always visible on minimap (dark blue = unexplored, bright blue = near/revealed)
     mc.fillStyle=c;mc.fillRect((dx+VIEW)*ms,(dy+VIEW)*mh2,ms+.5,mh2+.5);
   }
+  // Mega beasts
   mons.forEach(m=>{if(!m.alive||!m.mega)return;const mx=(m.x-px2+VIEW)*ms,my=(m.y-py2+VIEW)*mh2;if(mx<0||mx>w||my<0||my>h)return;mc.fillStyle='#ff6b00';mc.beginPath();mc.arc(mx,my,2.5,0,Math.PI*2);mc.fill();});
-  mc.fillStyle='#fff';mc.beginPath();mc.arc(VIEW*ms,VIEW*mh2,2.5,0,Math.PI*2);mc.fill();
+  // Boss arenas
+  bossArenas.forEach(a=>{const ax=(a.x-px2+VIEW)*ms,ay=(a.y-py2+VIEW)*mh2;if(ax<0||ax>w||ay<0||ay>h)return;mc.strokeStyle='rgba(255,60,60,.7)';mc.lineWidth=1;mc.beginPath();mc.arc(ax,ay,a.r*ms*.5,0,Math.PI*2);mc.stroke();});
+  // Town markers on minimap
+  TOWNS.forEach(town=>{
+    const tx=(town.cx-px2+VIEW)*ms,ty=(town.cy-py2+VIEW)*mh2;
+    if(tx<0||tx>w||ty<0||ty>h)return;
+    mc.fillStyle=town.mapColor||'#fbbf24';
+    mc.beginPath();mc.arc(tx,ty,3.5,0,Math.PI*2);mc.fill();
+    mc.font='5px sans-serif';mc.fillStyle='#fff';mc.textAlign='center';
+    mc.fillText(town.ico,tx,ty-5);
+  });
+  // Blit to real canvas
+  canvas.getContext('2d').drawImage(_miniCache,0,0);
+  // Player dot
+  const ctx2=canvas.getContext('2d');
+  ctx2.fillStyle='#fff';ctx2.beginPath();ctx2.arc(VIEW*ms,VIEW*mh2,2.5,0,Math.PI*2);ctx2.fill();
 }
 
 // ═══════════════════════════════════════
 // UI
 // ═══════════════════════════════════════
-function updUI(){if(!G)return;document.getElementById('hf').style.width=(G.hp/G.maxHp*100)+'%';document.getElementById('ht').textContent=`${G.hp}/${G.maxHp}`;document.getElementById('lv').textContent=G.level;document.getElementById('go').textContent=G.gold;document.getElementById('wo').textContent=G.wood;document.getElementById('ge').textContent=G.gem;}
+// Cache DOM refs — never re-query per frame
+const _el={
+  hf:null,ht:null,lv:null,go:null,wo:null,ge:null,mt:null,al:null,sh:null
+};
+function initElCache(){
+  _el.hf=document.getElementById('hf');_el.ht=document.getElementById('ht');
+  _el.lv=document.getElementById('lv');_el.go=document.getElementById('go');
+  _el.wo=document.getElementById('wo');_el.ge=document.getElementById('ge');
+  _el.mt=document.getElementById('mt');_el.al=document.getElementById('al');
+  _el.sh=document.getElementById('sh');
+}
+// Track last values to skip redundant DOM writes
+let _lastHP=-1,_lastMaxHP=-1,_lastLV=-1,_lastGo=-1,_lastWo=-1,_lastGe=-1,_lastMt=-1;
+function updUI(){
+  if(!G)return;
+  if(G.hp!==_lastHP||G.maxHp!==_lastMaxHP){
+    _lastHP=G.hp;_lastMaxHP=G.maxHp;
+    _el.hf.style.width=(G.hp/G.maxHp*100)+'%';
+    _el.ht.textContent=`${G.hp}/${G.maxHp}`;
+  }
+  if(G.level!==_lastLV){_lastLV=G.level;_el.lv.textContent=G.level;}
+  if(G.gold!==_lastGo){_lastGo=G.gold;_el.go.textContent=G.gold;}
+  if(G.wood!==_lastWo){_lastWo=G.wood;_el.wo.textContent=G.wood;}
+  if(G.gem!==_lastGe){_lastGe=G.gem;_el.ge.textContent=G.gem;}
+  const mt=G.metal||0;if(mt!==_lastMt){_lastMt=mt;_el.mt.textContent=mt;}
+  // Boost bar
+  const bf=document.getElementById('boost-fill');
+  const bl=document.getElementById('boost-label');
+  const bs=document.getElementById('boost-sub');
+  if(bf){
+    if(boostActive){
+      const pct=(boostTimer/BOOST_DURATION)*100;
+      bf.style.width=pct+'%';bf.style.background='#10b981';
+      bl.textContent='💨 BOOST';bl.style.color='#10b981';
+      if(bs)bs.textContent=Math.ceil(boostTimer)+'s';
+    } else if(boostCooldown>0){
+      const pct=((BOOST_COOLDOWN-boostCooldown)/BOOST_COOLDOWN)*100;
+      bf.style.width=pct+'%';bf.style.background='#475569';
+      bl.textContent='💨 BOOST';bl.style.color='rgba(255,255,255,.35)';
+      if(bs){bs.textContent=Math.ceil(boostCooldown)+'s';bs.style.color='rgba(255,255,255,.35)';}
+    } else {
+      bf.style.width='100%';bf.style.background='#10b981';
+      bl.textContent='💨 BOOST';bl.style.color='#10b981';
+      if(bs){bs.textContent='READY';bs.style.color='#10b981';}
+    }
+  }
+}
+let _lastArea='';
 function updAL(){
   const{x,y}=G.pos;
   const t=getTileAt(Math.floor(x),Math.floor(y));
   let a='THE WILDS';
-  if(x>=10&&x<=16&&y>=12&&y<=17)a='🏡 THE VILLAGE';
-  else if(x>=22&&x<=34&&y>=4&&y<=18)a='🌲 THORNWOOD FOREST';
-  else if(y>=22&&y<=30&&x>=12&&x<=34)a='🏜 AMBER DESERT';
-  else if(x>=38&&x<=47&&y>=26&&y<=36)a="🔴 DUNGEON";
-  else if(TBLOCK.has(t))a='🌊 THE OPEN SEA';
-  else if(t===TR.F)a='🌲 THE DEEP WOODS';
-  else if(t===TR.D)a='🔴 DARK RUINS';
-  else if(t===TR.ST)a='🏔 STONE HIGHLANDS';
-  else if(t===TR.S)a='🏜 THE BADLANDS';
-  document.getElementById('al').textContent=a;
+  // Check named towns first
+  for(const town of TOWNS){
+    const d=Math.sqrt((x-town.cx)**2+(y-town.cy)**2);
+    if(d<town.r+1){a=`${town.ico} ${town.name.toUpperCase()}`;break;}
+  }
+  // Biome fallback
+  if(a==='THE WILDS'){
+    if(TBLOCK.has(t))a='🌊 THE OPEN SEA';
+    else if(t===TR.F)a='🌲 THE DEEP WOODS';
+    else if(t===TR.D)a='🔴 DARK RUINS';
+    else if(t===TR.ST)a='🏔 STONE HIGHLANDS';
+    else if(t===TR.S)a='🏜 THE BADLANDS';
+  }
+  if(a!==_lastArea){
+    _lastArea=a;_el.al.textContent=a;
+    // First-time town discovery notification
+    for(const town of TOWNS){
+      if(a.includes(town.name.toUpperCase())&&!visitedTowns.has(town.id)){
+        visitedTowns.add(town.id);
+        notM(`📍 DISCOVERED: ${town.ico} ${town.name}!`);
+        lg('info',`📍 ${town.name}: ${town.desc}`);
+      }
+    }
+  }
+  const dist2=dv(G.pos.x,G.pos.y);
+  const inSafe=dist2<SAFE_R;
+  const tgtOp=inSafe?'1':'0';
+  if(_el.sh.style.opacity!==tgtOp)_el.sh.style.opacity=tgtOp;
+}
+function rSt(el){
+  if(!el||!G)return;
+  const elapsed=Math.floor((Date.now()-stats.startTime)/1000);
+  const mm=Math.floor(elapsed/60),ss=elapsed%60;
+  const dist=Math.floor(stats.distTraveled);
+  const rows=[
+    ['⏱ Time',`${mm}m ${ss}s`],
+    ['⚔️ Kills',stats.monstersKilled],
+    ['⭐ Mega Kills',stats.megasKilled],
+    ['🧩 Riddles Solved',G.riddlesSolved||0],
+    ['📏 Distance',`${dist} tiles`],
+    ['💰 Gold Earned',stats.goldEarned],
+    ['💥 Dmg Dealt',stats.damageDealt],
+    ['🩸 Dmg Taken',stats.damageTaken],
+    ['✨ Spells Cast',stats.spellsCast||0],
+    ['🔫 Shots Fired',stats.shotsFired||0],
+    ['💀 Deaths',stats.deathCount||0],
+    ['🌙 Night Survived',isNight()?'YES':'no'],
+    ['⚙️ Metal',G.metal||0],
+    ['🧪 Potions',G.potions||0],
+    ['🏆 Level',G.level],
+    ['Legacy INT',G.leg.int||0],
+    ['Legacy STR',G.leg.str||0],
+  ];
+  el.innerHTML='<div class="sec-t">Adventure Stats</div>';
+  rows.forEach(([k,v])=>{
+    const d=document.createElement('div');d.className='stat-row';
+    d.innerHTML=`<span>${k}</span><span>${v}</span>`;el.appendChild(d);
+  });
 }
 function setBadge(cls){const b=document.getElementById('cb');b.textContent=cls.toUpperCase();b.className=`badge ${cls==='wizard'?'wiz':'pir'}`;}
 function buildHB(){const bar=document.getElementById('hb');bar.innerHTML='';G.hb.forEach((s,i)=>{const el=document.createElement('div');el.className=`slot${!s.ico?' empty':''}${i===G.slot?' on':''}`;el.innerHTML=`<span class="sn">${i+1}</span>${s.ico||''}`;el.onclick=()=>{G.slot=i;document.querySelectorAll('.slot').forEach((e,j)=>e.classList.toggle('on',j===i));};bar.appendChild(el);});}
@@ -1194,7 +2262,7 @@ function rSh(el){
 function rSide(){
   if(!G)return;const isMob=window.innerWidth<=768;if(isMob)return;
   const el=document.getElementById('p-'+paneId);if(!el)return;
-  if(paneId==='inv')rInv(el);else if(paneId==='sp2')rSp(el);else if(paneId==='sh2')rSh(el);
+  if(paneId==='inv')rInv(el);else if(paneId==='sp2')rSp(el);else if(paneId==='sh2')rSh(el);else if(paneId==='st2')rSt(el);
 }
 document.querySelectorAll('#side .tab').forEach(t=>{t.addEventListener('click',()=>{document.querySelectorAll('#side .tab').forEach(x=>x.classList.remove('on'));document.querySelectorAll('#side .pane').forEach(x=>x.classList.remove('on'));t.classList.add('on');paneId=t.dataset.tab;const p=document.getElementById('p-'+paneId);if(p){p.classList.add('on');rSide();}});});
 
@@ -1204,7 +2272,7 @@ document.querySelectorAll('#side .tab').forEach(t=>{t.addEventListener('click',(
 let dTab='inv';
 function odr(){const dr=document.getElementById('dr');dr.style.display='flex';requestAnimationFrame(()=>{dr.classList.add('op');document.getElementById('bk').classList.add('on');});rDp(dTab);}
 function cdr(){document.getElementById('dr').classList.remove('op');document.getElementById('bk').classList.remove('on');setTimeout(()=>document.getElementById('dr').style.display='none',260);}
-function rDp(tab){dTab=tab;document.querySelectorAll('#dts .tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===tab));document.querySelectorAll('#dr .pane').forEach(p=>p.classList.remove('on'));const el=document.getElementById('dp-'+tab);if(!el)return;el.classList.add('on');if(tab==='inv')rInv(el);else if(tab==='sp2')rSp(el);else if(tab==='sh2')rSh(el);else if(tab==='map')drawMini(document.getElementById('mcd'),230,192);}
+function rDp(tab){dTab=tab;document.querySelectorAll('#dts .tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===tab));document.querySelectorAll('#dr .pane').forEach(p=>p.classList.remove('on'));const el=document.getElementById('dp-'+tab);if(!el)return;el.classList.add('on');if(tab==='inv')rInv(el);else if(tab==='sp2')rSp(el);else if(tab==='sh2')rSh(el);else if(tab==='st2')rSt(el);else if(tab==='map')drawMini(document.getElementById('mcd'),230,192);}
 document.querySelectorAll('#dts .tab').forEach(t=>t.addEventListener('click',()=>rDp(t.dataset.tab)));
 document.getElementById('pb').addEventListener('click',odr);
 document.getElementById('mute-btn').addEventListener('click',toggleMute);
@@ -1213,11 +2281,25 @@ document.getElementById('mute-btn').addEventListener('click',toggleMute);
 // TOUCH: LEFT JOYSTICK (move) + RIGHT JOYSTICK (aim+fire)
 // ═══════════════════════════════════════
 const joy={active:false,id:null,cx:0,cy:0,dx:0,dy:0};
+// Boost (sprint) state
+let boostActive=false, boostTimer=0, boostCooldown=0;
+const BOOST_DURATION=5, BOOST_COOLDOWN=30;
+let _lastTapTime=0; // for double-tap detection on left joystick
 
 function initTouch(){
   // ── Left joystick (move) ──
   const jz=document.getElementById('jz'),jn=document.getElementById('jn'),R=54;
-  jz.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0],r=jz.getBoundingClientRect();joy.active=true;joy.id=t.identifier;joy.cx=r.left+r.width/2;joy.cy=r.top+r.height/2;mj(t.clientX,t.clientY,jn,R);},{passive:false});
+  jz.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    const t=e.changedTouches[0],r=jz.getBoundingClientRect();
+    joy.active=true;joy.id=t.identifier;
+    joy.cx=r.left+r.width/2;joy.cy=r.top+r.height/2;
+    mj(t.clientX,t.clientY,jn,R);
+    // Double-tap detection for boost
+    const now=performance.now();
+    if(now-_lastTapTime<320)activateBoost();
+    _lastTapTime=now;
+  },{passive:false});
   document.addEventListener('touchmove',e=>{if(!joy.active&&!aim.active)return;e.preventDefault();for(const t of e.changedTouches){if(t.identifier===joy.id)mj(t.clientX,t.clientY,jn,R);if(t.identifier===aim.id)ma(t.clientX,t.clientY);}},{passive:false});
   document.addEventListener('touchend',e=>{for(const t of e.changedTouches){if(t.identifier===joy.id){joy.active=false;joy.dx=0;joy.dy=0;jn.style.transform='translate(-50%,-50%)';}if(t.identifier===aim.id){aim.active=false;aim.firing=false;aim.dx=0;aim.dy=0;const an=document.getElementById('an');an.style.transform='translate(-50%,-50%)';}}}); 
 
@@ -1270,6 +2352,7 @@ document.addEventListener('keydown',e=>{
   keys[e.key]=true;if(!G)return;
   if(e.key===' '){doAtk();e.preventDefault();}
   if(e.key==='e'||e.key==='E'){doInt();e.preventDefault();}
+  if(e.key==='Shift'){activateBoost();e.preventDefault();}
   if(e.key>='1'&&e.key<='6'){G.slot=+e.key-1;document.querySelectorAll('.slot').forEach((s,j)=>s.classList.toggle('on',j===G.slot));e.preventDefault();}
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))e.preventDefault();
 });
@@ -1318,7 +2401,7 @@ function startGame(cls){
   document.getElementById('title').style.display='none';
   document.getElementById('ui').style.display='flex';
   resize();initTiles();initSpawns();G=fresh(cls);
-  setBadge(cls);buildHB();updUI();initTouch();initAudio();startMusic();
+  setBadge(cls);buildHB();initElCache();updUI();initTouch();initAudio();startMusic();
   if(window.innerWidth<=768){document.getElementById('tl').style.display='block';document.getElementById('pb').style.display='block';}
   document.getElementById('mute-btn').style.display='block';
   lg('info',cls==='wizard'?'✨ You awaken as a Wizard. The world is infinite — explore far!':'⚓ You are a Pirate. Fight, explore, build your ship!');
