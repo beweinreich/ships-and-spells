@@ -2801,6 +2801,8 @@ function draw(){
       ctx.fillStyle='#1f2937';ctx.fillRect(rsx-bw2/2,rsy-4,bw2,2.5);
       ctx.fillStyle=hpr>.5?'#67e8f9':'#ef4444';ctx.fillRect(rsx-bw2/2,rsy-4,bw2*hpr,2.5);
     }
+    // Off-screen? Point an arrow at the screen edge so you can still find them
+    if(rsx<0||rsx>W||rsy+T/2<0||rsy+T/2>H)drawPartnerArrow(W,H);
   }
   // Player (always dead-center)
   const cpx=W/2,cpy=H/2;
@@ -2883,6 +2885,51 @@ function draw(){
   }
 }
 
+// Edge-of-screen pointer toward your co-op partner when they're off camera,
+// with how far away they are so you know whether it's worth the walk.
+function drawPartnerArrow(W,H){
+  const R=MP.remote;if(!R||!G)return;
+  const dx=R.x-G.pos.x,dy=R.y-G.pos.y;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist<.001)return;
+  const ang=Math.atan2(dy,dx),c=Math.cos(ang),s=Math.sin(ang);
+  // Slide out from the center until we hit the inset border of the view
+  const mgn=30,hx=Math.max(10,W/2-mgn),hy=Math.max(10,H/2-mgn);
+  const t=Math.min(Math.abs(c)>1e-4?hx/Math.abs(c):Infinity,Math.abs(s)>1e-4?hy/Math.abs(s):Infinity);
+  const ax=W/2+c*t,ay=H/2+s*t;
+  const down=(R.hp||0)<=0;
+  const col=down?'#ef4444':(R.cls==='wizard'?'#a78bfa':'#fb923c');
+  const pulse=(Math.sin(performance.now()/300)+1)*.5;
+  const r=13;
+  ctx.save();
+  // Badge with the partner's icon
+  ctx.fillStyle='rgba(0,0,0,.62)';
+  ctx.beginPath();ctx.arc(ax,ay,r,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=col;ctx.lineWidth=2;ctx.globalAlpha=.6+pulse*.4;
+  ctx.beginPath();ctx.arc(ax,ay,r,0,Math.PI*2);ctx.stroke();
+  ctx.globalAlpha=1;
+  ctx.font='13px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(down?'💀':(R.cls==='wizard'?'🧙':'🏴‍☠️'),ax,ay+1);
+  // Triangle just outside the badge, aimed their way
+  const tip=r+10+pulse*3,base=r+3;
+  ctx.fillStyle=col;ctx.globalAlpha=.75+pulse*.25;
+  ctx.beginPath();
+  ctx.moveTo(ax+c*tip,ay+s*tip);
+  ctx.lineTo(ax+c*base-s*6,ay+s*base+c*6);
+  ctx.lineTo(ax+c*base+s*6,ay+s*base-c*6);
+  ctx.closePath();ctx.fill();
+  ctx.globalAlpha=1;
+  // Distance label — sits opposite the arrow so the triangle never covers it
+  let ly=s>.25?ay-r-7:ay+r+11;
+  if(ly>H-4)ly=ay-r-7;
+  if(ly<9)ly=ay+r+11;
+  ctx.font='5px "Press Start 2P"';ctx.textBaseline='alphabetic';
+  ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(ax-15,ly-7,30,9);
+  ctx.fillStyle=down?'#ef4444':'#67e8f9';
+  ctx.fillText(Math.round(dist)+'m',ax,ly);
+  ctx.restore();
+}
+
 
 // ═══════════════════════════════════════
 // MINIMAP — cached offscreen, redraws every 2s
@@ -2902,6 +2949,7 @@ function drawMini(canvas,w,h){
     const VIEW=150;
     const ms=w/(VIEW*2),mh2=h/(VIEW*2);
     mc.fillStyle='#fff';mc.beginPath();mc.arc(VIEW*ms,VIEW*mh2,2.5,0,Math.PI*2);mc.fill();
+    drawMiniPartner(mc,px2,py2,VIEW,ms,mh2,w,h);
     return;
   }
   // Full redraw
@@ -2938,6 +2986,15 @@ function drawMini(canvas,w,h){
   // Player dot
   const ctx2=canvas.getContext('2d');
   ctx2.fillStyle='#fff';ctx2.beginPath();ctx2.arc(VIEW*ms,VIEW*mh2,2.5,0,Math.PI*2);ctx2.fill();
+  drawMiniPartner(ctx2,px2,py2,VIEW,ms,mh2,w,h);
+}
+// Co-op partner shows up on the minimap too, in the same cyan as their name tag
+function drawMiniPartner(c,px2,py2,VIEW,ms,mh2,w,h){
+  if(!mpActive()||!MP.remote||typeof MP.remote.x!=='number')return;
+  const rx=(MP.remote.x-px2+VIEW)*ms,ry=(MP.remote.y-py2+VIEW)*mh2;
+  if(rx<0||rx>w||ry<0||ry>h)return;
+  c.fillStyle='#67e8f9';c.beginPath();c.arc(rx,ry,2.5,0,Math.PI*2);c.fill();
+  c.strokeStyle='rgba(0,0,0,.7)';c.lineWidth=1;c.stroke();
 }
 
 // ═══════════════════════════════════════
