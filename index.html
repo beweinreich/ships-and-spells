@@ -1474,10 +1474,10 @@ function fresh(cls,leg={lives:0,int:0,str:0,lp:0,perks:{hp:0,gold:0,boost:0,pot:
 // SPAWNS — chunk-based, infinite world
 // ═══════════════════════════════════════
 function chunkKey(cx,cy){return `${cx},${cy}`;}
+const CHUNK=16;          // world is streamed in 16x16 tile chunks
+const CULL_R=400;        // keep world entities within this radius of a player
 
 function maybeSpawnChunk(px,py){
-  // Spawn monsters in 16x16 chunks around player
-  const CHUNK=16;
   const cx0=Math.floor((px-32)/CHUNK), cy0=Math.floor((py-32)/CHUNK);
   for(let cy=cy0;cy<=cy0+4;cy++)for(let cx=cx0;cx<=cx0+4;cx++){
     const key=chunkKey(cx,cy);
@@ -1562,7 +1562,8 @@ function spawnChunkMonsters(ox,oy,size){
     const t2=getTileAt(Math.floor(mx),Math.floor(my));
     if(!TBLOCK.has(t2)){
       mons.push({...base,uid:`mega_${ox}_${oy}`,x:mx,y:my,hp:base.hp,maxHp:base.hp,alive:true,aggro:false,faction:null,mt:Math.random()*2,hx:mx,hy:my,st:0,sst:3});
-      bossArenas.push({x:mx,y:my,r:6,ico:base.ico,name:base.name});
+      // A chunk can be re-streamed after being culled — don't stack arena markers
+      if(!bossArenas.some(a=>a.x===mx&&a.y===my))bossArenas.push({x:mx,y:my,r:6,ico:base.ico,name:base.name});
     }
   }
   // Faction fighters
@@ -1610,6 +1611,12 @@ function loop(ts){
   const dt=Math.min((ts-lastT)/1000,.1);lastT=ts;
   tick(dt);draw();
   animId=requestAnimationFrame(loop);
+}
+
+// In co-op the world has to stay alive around BOTH players, not just whoever hosts
+function nearAnyPlayer(o,r){
+  if(G&&ds(o,G.pos)<r)return true;
+  return !!(mpActive()&&MP.remote&&typeof MP.remote.x==='number'&&ds(o,MP.remote)<r);
 }
 
 // Right joystick state (aim)
@@ -1674,7 +1681,7 @@ function tick(dt){
     }
     return true;
   });
-  hpGems=hpGems.filter(g=>ds(G.pos,g)<400);
+  hpGems=hpGems.filter(g=>nearAnyPlayer(g,CULL_R));
 
   // Ground loot pickup (walk over or press E to collect)
   lootDrops=lootDrops.filter(l=>{
@@ -1683,7 +1690,7 @@ function tick(dt){
       fx(l.x,l.y,l.col||'#fbbf24',6);sfxLoot();
       return false;
     }
-    return ds(G.pos,l)<300;
+    return nearAnyPlayer(l,300);
   });
 
   // Safe zone / grace
@@ -1692,8 +1699,16 @@ function tick(dt){
   mpTick(dt);
   if(!isGuest()){
     maybeSpawnChunk(G.pos.x,G.pos.y);
-    // Cull — scaled for 10x world
-    mons=mons.filter(m=>!m.alive||ds(m,G.pos)<400);
+    // Stream in the land around the partner too — the host is the only one who
+    // spawns, so without this the guest walks through a world with nothing in it
+    if(mpActive()&&MP.remote&&typeof MP.remote.x==='number')maybeSpawnChunk(MP.remote.x,MP.remote.y);
+    // Cull — scaled for 10x world. Anything near either player stays; when a
+    // chunk empties out, forget it so it repopulates if someone walks back.
+    mons=mons.filter(m=>{
+      if(nearAnyPlayer(m,CULL_R))return true;
+      spawnedChunks.delete(chunkKey(Math.floor(m.x/CHUNK),Math.floor(m.y/CHUNK)));
+      return false;
+    });
     mTmr+=dt;if(mTmr>.35){mTmr=0;tickMons();}
   }
 
@@ -3554,11 +3569,22 @@ function mpTick(dt){
     netSend({t:'input',x:+G.pos.x.toFixed(2),y:+G.pos.y.toFixed(2),dir:G.dir,
       hp:G.hp,maxHp:G.maxHp,cls:G.cls});
   } else {
-    // Host broadcasts world state near either player
-    const near=m=>m.alive&&(ds(m,G.pos)<45||(MP.remote&&ds(m,MP.remote)<45));
+    // Host broadcasts world state near either player. The budget is split per
+    // player: one shared cap taken in list order let a crowded host area use up
+    // every slot and leave the guest looking at an empty map.
+    const nearest=(pos,n)=>{
+      if(!pos||typeof pos.x!=='number')return [];
+      const out=[];
+      for(const m of mons){if(!m.alive)continue;const d=ds(m,pos);if(d<45)out.push({m,d});}
+      out.sort((a,b)=>a.d-b.d);
+      return out.slice(0,n).map(o=>o.m);
+    };
+    const seenM=new Set();
+    const sendMons=[...nearest(G.pos,30),...nearest(MP.remote,30)]
+      .filter(m=>{if(seenM.has(m))return false;seenM.add(m);return true;});
     netSend({t:'snap',dt:dayTime,
       p:{x:+G.pos.x.toFixed(2),y:+G.pos.y.toFixed(2),dir:G.dir,hp:G.hp,maxHp:G.maxHp,cls:G.cls},
-      mo:mons.filter(near).slice(0,60).map(m=>({u:m.uid,i:m.id,n:m.name,c:m.ico,
+      mo:sendMons.map(m=>({u:m.uid,i:m.id,n:m.name,c:m.ico,
         x:+m.x.toFixed(2),y:+m.y.toFixed(2),h:Math.max(0,m.hp),m:m.maxHp,
         g:m.aggro?1:0,M:m.mega?1:0,S:m.siege?1:0,f:m.faction||null})),
       pr:projs.slice(0,40).map(p=>({x:+p.x.toFixed(2),y:+p.y.toFixed(2),
