@@ -223,9 +223,14 @@ canvas#gc{display:block;touch-action:none;}
 .mp-lbl{font-family:'Press Start 2P',monospace;font-size:5.5px;color:var(--gold);
   margin-bottom:5px;line-height:1.6;}
 .mp-help{font-family:'VT323',monospace;font-size:13px;color:#8b95a8;line-height:1.5;}
-#mp-out,#mp-in{width:100%;background:#05080f;border:1px solid var(--border);color:#67e8f9;
-  font-family:monospace;font-size:9px;padding:6px;resize:vertical;word-break:break-all;
-  border-radius:2px;-webkit-user-select:text;user-select:text;}
+#mp-code{font-family:'Press Start 2P',monospace;font-size:clamp(22px,7vw,32px);color:#67e8f9;
+  letter-spacing:8px;text-align:center;padding:12px 0 6px;text-shadow:0 0 20px rgba(103,232,249,.5);}
+#mp-link{width:100%;background:#05080f;border:1px solid var(--border);color:#67e8f9;
+  font-family:monospace;font-size:10px;padding:7px;border-radius:2px;
+  -webkit-user-select:text;user-select:text;}
+#mp-join-code{width:100%;background:#05080f;border:1px solid #67e8f9;color:#67e8f9;
+  font-family:'Press Start 2P',monospace;font-size:20px;letter-spacing:8px;text-align:center;
+  padding:12px 6px;border-radius:2px;text-transform:uppercase;}
 #mp-badge{display:none;background:rgba(103,232,249,.12);border:1px solid #67e8f9;
   color:#67e8f9;font-size:5px;padding:2px 5px;border-radius:2px;margin-left:4px;}
 /* ── HELP MODAL ── */
@@ -297,24 +302,39 @@ canvas#gc{display:block;touch-action:none;}
     <h2>🌐 CO-OP (2 PLAYERS)</h2>
     <div id="mp-body">
       <p id="mp-status">Not connected</p>
+
       <div id="mp-choose">
-        <p class="mp-help">No server needed — you'll swap two codes with your friend (paste them in any chat app), then play peer-to-peer.</p>
-        <div style="display:flex;gap:8px;margin-top:10px;">
+        <p class="mp-help">Play together on any two devices, anywhere. One of you hosts and shares a code or link.</p>
+        <div style="display:flex;gap:8px;margin-top:12px;">
           <button class="gb" onclick="mpHost()">🏠 HOST GAME</button>
-          <button class="gb" onclick="mpJoinStart()">🔗 JOIN GAME</button>
+          <button class="gb" onclick="mpShowJoin()">🔗 JOIN GAME</button>
         </div>
       </div>
-      <div id="mp-step1" style="display:none;margin-top:10px;">
-        <div id="mp-s1-label" class="mp-lbl">1. Send THIS code to your friend:</div>
-        <textarea id="mp-out" readonly rows="4"></textarea>
-        <button class="gb" onclick="mpCopy()" style="margin-top:5px;">📋 COPY CODE</button>
+
+      <div id="mp-hosting" style="display:none;">
+        <div class="mp-lbl">Your room code:</div>
+        <div id="mp-code">····</div>
+        <p class="mp-help">Tell your friend this code, or send them the link below.</p>
+        <input id="mp-link" readonly value="" />
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="gb" onclick="mpShare()">📤 SHARE LINK</button>
+          <button class="gb" onclick="mpCopyLink()">📋 COPY</button>
+        </div>
+        <p class="mp-help" style="margin-top:10px;">Keep this screen open until they connect.</p>
       </div>
-      <div id="mp-step2" style="display:none;margin-top:12px;">
-        <div id="mp-in-label" class="mp-lbl">Paste code here:</div>
-        <textarea id="mp-in" rows="4" placeholder="Paste the code you were sent..."></textarea>
-        <button class="gb" onclick="mpSubmitCode()" style="margin-top:5px;">✅ SUBMIT</button>
+
+      <div id="mp-joining" style="display:none;">
+        <div class="mp-lbl">Enter your friend's room code:</div>
+        <input id="mp-join-code" maxlength="4" placeholder="ABCD"
+          oninput="this.value=this.value.toUpperCase()" autocomplete="off" autocapitalize="characters" />
+        <button class="gb" onclick="mpJoin()" style="margin-top:8px;">✅ CONNECT</button>
+        <p class="mp-help" style="margin-top:10px;">Joining room <b id="mp-joining-code">____</b></p>
       </div>
-      <p class="mp-help" style="margin-top:12px;">Both players should start a game after connecting. The host simulates monsters; if one of you dies you respawn in Emberwick and the run continues.</p>
+
+      <div id="mp-connected" style="display:none;">
+        <p class="mp-help">🟢 You're connected! Close this and start a game — you'll both appear in the same world.</p>
+        <p class="mp-help" style="margin-top:8px;">The host simulates monsters. If either of you dies, you respawn in Emberwick and the run continues.</p>
+      </div>
     </div>
     <div style="display:flex;gap:8px;justify-content:center;padding:0 18px 16px;">
       <button class="gb" onclick="cMp()">CLOSE</button>
@@ -366,6 +386,10 @@ canvas#gc{display:block;touch-action:none;}
       <h3>⚔️ GEAR &amp; APPEARANCE</h3>
       <p>Every kill has a chance to drop <b>gear</b> — a new sword or wand, an outfit, or an accessory. Rarer drops (<span style="color:#3b82f6">Rare</span>, <span style="color:#a855f7">Epic</span>, <span style="color:#f59e0b">Legendary</span>) glow brighter and hit harder. Mega beasts always drop Epic+.<br>
       Open your <b>Bag</b> to equip what you find — your weapon and hat appear on your character, your outfit becomes a visible cape, and rare+ gear gives you a glowing aura. Outfits also boost max HP, and weapons/accessories boost damage and crit chance. Gear resets each life, so every run looks different.</p>
+
+      <h3>🌐 CO-OP</h3>
+      <p>Tap <b>🌐 CO-OP</b> on the title screen. One player hosts and gets a <b>4-letter room code</b> plus a share link — send either to your friend. They tap the link (or type the code) and you're connected.<br>
+      Works on two phones anywhere, on WiFi or mobile data. The host simulates the world; if either of you dies you respawn in Emberwick and the run continues.</p>
 
       <h3>⛵ SHIPS</h3>
       <p>Pirates can gather wood to build a Sloop (and later a Brigantine) at the Shipwright, unlocking travel across the ocean.</p>
@@ -503,6 +527,7 @@ canvas#gc{display:block;touch-action:none;}
   </div>
 </div>
 
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 'use strict';
 // ═══════════════════════════════════════
@@ -3272,99 +3297,143 @@ function mpStatus(txt,col){
   if(b){b.style.display=mpActive()?'inline-block':'none';}
 }
 
-function mkPC(){
-  const pc=new RTCPeerConnection({iceServers:[
-    {urls:'stun:stun.l.google.com:19302'},
-    {urls:'stun:stun1.l.google.com:19302'}
-  ]});
-  pc.onconnectionstatechange=()=>{
-    if(pc.connectionState==='connected')mpStatus('🟢 Connected','#10b981');
-    else if(pc.connectionState==='disconnected'||pc.connectionState==='failed'){
-      mpStatus('🔴 Disconnected','#ef4444');MP.ready=false;MP.remote=null;
-      lg('sys','🔴 Peer disconnected.');
-    }
-  };
-  return pc;
+// ICE servers — STUN finds a direct path; TURN relays when carrier NAT blocks it.
+// Two phones on mobile data almost always need TURN, which is why STUN-only hung forever.
+const ICE_CFG={iceServers:[
+  {urls:'stun:stun.l.google.com:19302'},
+  {urls:'stun:stun1.l.google.com:19302'},
+  {urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
+  {urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
+  {urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'},
+]};
+const ROOM_CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusable 0/O/1/I
+function mkRoomCode(){let s='';for(let i=0;i<4;i++)s+=ROOM_CHARS[Math.floor(Math.random()*ROOM_CHARS.length)];return s;}
+function roomPeerId(code){return 'snsgame-'+code.toUpperCase();}
+function shareLink(code){
+  const base=location.origin+location.pathname;
+  return base+'?join='+code.toUpperCase();
 }
-// Wait for ICE gathering to finish so the code contains everything needed
-function iceDone(pc){
-  return new Promise(res=>{
-    if(pc.iceGatheringState==='complete')return res();
-    const t=setTimeout(res,3000); // don't hang forever
-    pc.onicegatheringstatechange=()=>{if(pc.iceGatheringState==='complete'){clearTimeout(t);res();}};
+function peerReady(){return typeof Peer!=='undefined';}
+
+// Adapter so PeerJS DataConnection behaves like the RTCDataChannel the game already expects
+function wireConn(conn){
+  MP.conn=conn;
+  MP.dc={readyState:'open',send:d=>{try{conn.send(d);}catch(e){}},close:()=>{try{conn.close();}catch(e){}}};
+  conn.on('open',()=>{
+    MP.ready=true;
+    mpStatus('🟢 Connected — co-op active!','#10b981');
+    showMpPanel('connected');
+    lg('info','🌐 Peer connected! Co-op active.');not('🌐 CO-OP CONNECTED');
+    netSend({t:'hello',cls:G?G.cls:'wizard'});
+  });
+  conn.on('data',d=>{try{onNetMsg(typeof d==='string'?JSON.parse(d):d);}catch(e){}});
+  conn.on('close',()=>{
+    MP.ready=false;MP.remote=null;
+    mpStatus('🔴 Partner disconnected','#ef4444');
+    lg('sys','🔴 Peer disconnected.');
+  });
+  conn.on('error',e=>mpStatus('❌ '+(e.type||e.message||'connection error'),'#ef4444'));
+}
+function showMpPanel(which){
+  const ids=['mp-choose','mp-hosting','mp-joining','mp-connected'];
+  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  const on=document.getElementById('mp-'+which);
+  if(on)on.style.display='block';
+}
+function mkPeer(id){
+  const p=id?new Peer(id,{config:ICE_CFG,debug:0}):new Peer({config:ICE_CFG,debug:0});
+  p.on('error',e=>{
+    if(e.type==='unavailable-id'){
+      mpStatus('⚠️ That room code is taken — try hosting again','#f59e0b');
+    } else if(e.type==='peer-unavailable'){
+      mpStatus('❌ No game found with that code. Check it and retry.','#ef4444');
+    } else if(e.type==='network'||e.type==='server-error'){
+      mpStatus('❌ Cannot reach the matchmaking server. Check your connection.','#ef4444');
+    } else {
+      mpStatus('❌ '+(e.type||e.message),'#ef4444');
+    }
+  });
+  p.on('disconnected',()=>{if(!MP.ready)mpStatus('⚠️ Lost matchmaking connection','#f59e0b');});
+  return p;
+}
+
+function mpHost(){
+  if(!peerReady()){mpStatus('❌ Networking library not loaded — check your internet','#ef4444');return;}
+  mpDisconnect(true);
+  MP.on=true;MP.role='host';
+  const code=mkRoomCode();
+  MP.code=code;
+  mpStatus('⏳ Creating room…');
+  showMpPanel('hosting');
+  MP.peer=mkPeer(roomPeerId(code));
+  MP.peer.on('open',()=>{
+    document.getElementById('mp-code').textContent=code;
+    document.getElementById('mp-link').value=shareLink(code);
+    mpStatus('✅ Room ready — waiting for your friend…','#10b981');
+  });
+  MP.peer.on('connection',conn=>{
+    mpStatus('⏳ Friend found, connecting…');
+    wireConn(conn);
   });
 }
-const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
-const dec=s=>JSON.parse(decodeURIComponent(escape(atob(s.trim()))));
-
-function wireDC(dc){
-  MP.dc=dc;
-  dc.onopen=()=>{
-    MP.ready=true;mpStatus('🟢 Connected','#10b981');
-    lg('info','🌐 Peer connected! Co-op active.');not('🌐 CO-OP CONNECTED');
-    dc.send(JSON.stringify({t:'hello',cls:G?G.cls:'wizard'}));
-  };
-  dc.onclose=()=>{MP.ready=false;MP.remote=null;mpStatus('🔴 Closed','#ef4444');};
-  dc.onmessage=e=>{try{onNetMsg(JSON.parse(e.data));}catch(err){}};
+function mpJoin(codeRaw){
+  if(!peerReady()){mpStatus('❌ Networking library not loaded — check your internet','#ef4444');return;}
+  const code=(codeRaw||document.getElementById('mp-join-code').value||'').trim().toUpperCase();
+  if(code.length!==4){mpStatus('⚠️ Enter the 4-character code','#f59e0b');return;}
+  mpDisconnect(true);
+  MP.on=true;MP.role='guest';MP.code=code;
+  mpStatus('⏳ Looking for room '+code+'…');
+  showMpPanel('joining');
+  const jc=document.getElementById('mp-joining-code');if(jc)jc.textContent=code;
+  MP.peer=mkPeer(null);
+  MP.peer.on('open',()=>{
+    mpStatus('⏳ Connecting to '+code+'…');
+    const conn=MP.peer.connect(roomPeerId(code),{reliable:true});
+    wireConn(conn);
+    // If nothing happens in 20s, tell them plainly instead of hanging forever
+    setTimeout(()=>{if(!MP.ready)mpStatus('❌ Could not connect. Check the code, or have the host re-open the room.','#ef4444');},20000);
+  });
 }
-
-async function mpHost(){
-  MP.on=true;MP.role='host';
-  MP.pc=mkPC();
-  wireDC(MP.pc.createDataChannel('game',{ordered:true}));
-  const offer=await MP.pc.createOffer();
-  await MP.pc.setLocalDescription(offer);
-  mpStatus('⏳ Gathering network info…');
-  await iceDone(MP.pc);
-  document.getElementById('mp-out').value=enc(MP.pc.localDescription);
-  document.getElementById('mp-step1').style.display='block';
-  document.getElementById('mp-step2').style.display='block';
-  document.getElementById('mp-in-label').textContent='2. Paste your friend\'s ANSWER code here:';
-  document.getElementById('mp-choose').style.display='none';
-  mpStatus('📋 Send your code, then paste their answer');
+function mpShowJoin(){showMpPanel('joining');mpStatus('Enter the 4-character code from your friend');
+  const jc=document.getElementById('mp-joining-code');if(jc)jc.textContent='____';}
+function mpCopyLink(){
+  const t=document.getElementById('mp-link');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t.value).then(()=>mpStatus('✅ Link copied — send it to your friend','#10b981'))
+      .catch(()=>{t.select();mpStatus('Select the link and copy it manually');});
+  } else {
+    t.select();t.setSelectionRange(0,99999);
+    try{document.execCommand('copy');mpStatus('✅ Link copied','#10b981');}
+    catch(e){mpStatus('Select the link and copy it manually');}
+  }
 }
-async function mpJoinStart(){
-  MP.on=true;MP.role='guest';
-  MP.pc=mkPC();
-  MP.pc.ondatachannel=e=>wireDC(e.channel);
-  document.getElementById('mp-step2').style.display='block';
-  document.getElementById('mp-in-label').textContent='1. Paste the HOST code here, then press Submit:';
-  document.getElementById('mp-choose').style.display='none';
-  mpStatus('📋 Paste the host code below');
+function mpShare(){
+  const url=document.getElementById('mp-link').value;
+  if(navigator.share){
+    navigator.share({title:'Spells & Ships — join my co-op game',text:'Join my game! Code: '+MP.code,url})
+      .catch(()=>{});
+  } else mpCopyLink();
 }
-async function mpSubmitCode(){
-  const raw=document.getElementById('mp-in').value.trim();
-  if(!raw){mpStatus('⚠️ Paste a code first','#f59e0b');return;}
-  let sdp;try{sdp=dec(raw);}catch(e){mpStatus('❌ Invalid code','#ef4444');return;}
-  try{
-    if(MP.role==='guest'){
-      await MP.pc.setRemoteDescription(sdp);
-      const ans=await MP.pc.createAnswer();
-      await MP.pc.setLocalDescription(ans);
-      mpStatus('⏳ Gathering network info…');
-      await iceDone(MP.pc);
-      document.getElementById('mp-out').value=enc(MP.pc.localDescription);
-      document.getElementById('mp-step1').style.display='block';
-      document.getElementById('mp-s1-label').textContent='2. Send THIS answer code back to the host:';
-      mpStatus('📋 Send this answer back to the host');
-    } else {
-      await MP.pc.setRemoteDescription(sdp);
-      mpStatus('⏳ Connecting…');
-    }
-  }catch(e){mpStatus('❌ '+e.message,'#ef4444');}
+function mpDisconnect(quiet){
+  try{if(MP.conn)MP.conn.close();}catch(e){}
+  try{if(MP.peer)MP.peer.destroy();}catch(e){}
+  MP={on:false,role:null,peer:null,conn:null,dc:null,ready:false,code:null,remote:null,
+      pendingHits:[],lastSend:0,sendHz:15,snapMons:[],snapProjs:[],snapLoot:[]};
+  if(!quiet){
+    mpStatus('Not connected');
+    showMpPanel('choose');
+    lg('sys','🌐 Multiplayer disconnected.');
+  }
 }
-function mpCopy(){
-  const t=document.getElementById('mp-out');
-  t.select();t.setSelectionRange(0,99999);
-  try{document.execCommand('copy');mpStatus('✅ Copied to clipboard','#10b981');}
-  catch(e){mpStatus('Select the text and copy manually');}
-}
-function mpDisconnect(){
-  try{if(MP.dc)MP.dc.close();if(MP.pc)MP.pc.close();}catch(e){}
-  MP={on:false,role:null,pc:null,dc:null,ready:false,remote:null,pendingHits:[],
-      lastSend:0,sendHz:15,snapMons:[],snapProjs:[],snapLoot:[]};
-  mpStatus('Not connected');
-  lg('sys','🌐 Multiplayer disconnected.');
+// Auto-join when opened from a shared link: ?join=CODE
+function mpCheckUrl(){
+  const m=location.search.match(/[?&]join=([A-Za-z0-9]{4})/);
+  if(!m)return;
+  const code=m[1].toUpperCase();
+  oMp();
+  document.getElementById('mp-join-code').value=code;
+  mpStatus('🔗 Joining room '+code+' from link…');
+  setTimeout(()=>mpJoin(code),400);
 }
 
 // ── Message handling ──
@@ -3460,6 +3529,7 @@ function startGame(cls){
   lastT=performance.now();animId=requestAnimationFrame(loop);
 }
 mkStars();
+mpCheckUrl();
 </script>
 </body>
 </html>
